@@ -58,7 +58,7 @@ impl std::fmt::Display for Identifier {
         write!(f, "SSH-{}-{}", self.protoversion, self.softwareversion)?;
 
         if let Some(comments) = &self.comments {
-            write!(f, " {}", comments)?;
+            write!(f, " {comments}",)?;
         }
 
         write!(f, "\r\n")
@@ -71,8 +71,7 @@ impl std::str::FromStr for Identifier {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (id, comments) = s
             .split_once(' ')
-            .map(|(id, comments)| (id, Some(comments)))
-            .unwrap_or_else(|| (s, None));
+            .map_or_else(|| (s, None), |(id, comments)| (id, Some(comments)));
 
         match id.splitn(3, '-').collect::<Vec<_>>()[..] {
             ["SSH", protoversion, softwareversion] => Ok(Self {
