@@ -12,13 +12,13 @@ use crate::arch;
 #[derive(Debug)]
 #[brw(big, magic = 1_u8)]
 pub struct Disconnect {
-    /// SSH_MSG_DISCONNECT's _reason code_.
+    /// Reason for disconnection.
     pub reason: DisconnectReason,
 
-    /// SSH_MSG_DISCONNECT's _description_.
+    /// Description of the reason for disconnection.
     pub description: arch::StringUtf8,
 
-    /// SSH_MSG_DISCONNECT's _language tag_.
+    /// Language tag.
     pub language: arch::StringAscii,
 }
 
@@ -101,7 +101,7 @@ pub enum DisconnectReason {
 #[derive(Debug)]
 #[brw(big, magic = 2_u8)]
 pub struct Ignore {
-    /// SSH_MSG_IGNORE's _data_.
+    /// A random blob of data to ignore.
     pub data: arch::String,
 }
 
@@ -112,13 +112,13 @@ pub struct Ignore {
 #[derive(Debug)]
 #[brw(big, magic = 4_u8)]
 pub struct Debug {
-    /// SSH_MSG_DEBUG's _always_display_.
+    /// Whether the debug data should be forcefully displayed.
     pub always_display: arch::Bool,
 
-    /// SSH_MSG_DEBUG's _message_.
+    /// The debug message.
     pub message: arch::StringUtf8,
 
-    /// SSH_MSG_DEBUG's _language_.
+    /// Language tag.
     pub language: arch::StringAscii,
 }
 
@@ -129,7 +129,7 @@ pub struct Debug {
 #[derive(Debug)]
 #[brw(big, magic = 3_u8)]
 pub struct Unimplemented {
-    /// SSH_MSG_UNIMPLEMENTED's _packet sequence number of rejected message_.
+    /// Packet sequence number of rejected message.
     pub seq: u32,
 }
 
@@ -140,7 +140,7 @@ pub struct Unimplemented {
 #[derive(Debug)]
 #[brw(big, magic = 5_u8)]
 pub struct ServiceRequest {
-    /// SSH_MSG_SERVICE_REQUEST's _service name_.
+    /// The service name to request.
     pub service_name: u32,
 }
 
@@ -151,7 +151,7 @@ pub struct ServiceRequest {
 #[derive(Debug)]
 #[brw(big, magic = 6_u8)]
 pub struct ServiceAccept {
-    /// SSH_MSG_SERVICE_ACCEPT's _service name_.
+    /// Service name accepted to be requested.
     pub service_name: u32,
 }
 
@@ -162,43 +162,44 @@ pub struct ServiceAccept {
 #[derive(Debug)]
 #[brw(big, magic = 20_u8)]
 pub struct KexInit {
-    /// SSH_MSG_KEXINIT's _cookie_.
+    /// The kex-init cookie.
     pub cookie: [u8; 16],
 
-    /// SSH_MSG_KEXINIT's _kex_algorithms_.
+    /// Kex algorithms.
     pub kex_algorithms: arch::NameList,
 
-    /// SSH_MSG_KEXINIT's _server_host_key_algorithms_.
+    /// Server host-key algorithms.
     pub server_host_key_algorithms: arch::NameList,
 
-    /// SSH_MSG_KEXINIT's _encryption_algorithms_client_to_server_.
+    /// Client -> server encryption algorithms.
     pub encryption_algorithms_client_to_server: arch::NameList,
 
-    /// SSH_MSG_KEXINIT's _encryption_algorithms_server_to_client_.
+    /// Server -> client encryption algorithms.
     pub encryption_algorithms_server_to_client: arch::NameList,
 
-    /// SSH_MSG_KEXINIT's _mac_algorithms_client_to_server_.
+    /// Client -> server MAC algorithms.
     pub mac_algorithms_client_to_server: arch::NameList,
 
-    /// SSH_MSG_KEXINIT's _mac_algorithms_server_to_client_.
+    /// Server -> client MAC algorithms.
     pub mac_algorithms_server_to_client: arch::NameList,
 
-    /// SSH_MSG_KEXINIT's _compression_algorithms_client_to_server_.
+    /// Client -> server compression algorithms.
     pub compression_algorithms_client_to_server: arch::NameList,
 
-    /// SSH_MSG_KEXINIT's _compression_algorithms_server_to_client_.
+    /// Server -> client compression algorithms.
     pub compression_algorithms_server_to_client: arch::NameList,
 
-    /// SSH_MSG_KEXINIT's _languages_client_to_server_.
+    /// Client -> server languages.
     pub languages_client_to_server: arch::NameList,
 
-    /// SSH_MSG_KEXINIT's _languages_server_to_client_.
+    /// Server -> client languages.
     pub languages_server_to_client: arch::NameList,
 
-    /// SSH_MSG_KEXINIT's _first_kex_packet_follows_.
+    /// Whether the first kex packet follows.
     pub first_kex_packet_follows: arch::Bool,
 
-    reserved: u32,
+    #[bw(calc = 0)]
+    _reserved: u32,
 }
 
 /// The `SSH_MSG_NEWKEYS` message.

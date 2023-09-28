@@ -12,14 +12,14 @@ use crate::arch;
 #[derive(Debug)]
 #[brw(big, magic = 80_u8)]
 pub struct GlobalRequest {
-    /// SSH_MSG_GLOBAL_REQUEST's _request name_.
+    /// Global request's name.
     pub name: arch::StringAscii,
 
-    /// SSH_MSG_GLOBAL_REQUEST's _want reply_.
+    /// Whether the sender wants a reply.
     pub want_reply: arch::Bool,
 
-    /// SSH_MSG_GLOBAL_REQUEST's _request-specific data_.
-    pub data: todo!(),
+    /// Request-specific data.
+    pub data: (),
 }
 
 /// The `SSH_MSG_REQUEST_SUCCESS` message.
@@ -29,8 +29,8 @@ pub struct GlobalRequest {
 #[derive(Debug)]
 #[brw(big, magic = 81_u8)]
 pub struct RequestSuccess {
-    /// SSH_MSG_REQUEST_SUCCESS's _response-specific data_.
-    pub data: todo!(),
+    /// Response-specific data.
+    pub data: (),
 }
 
 /// The `SSH_MSG_REQUEST_FAILURE` message.
@@ -48,19 +48,19 @@ pub struct RequestFailure;
 #[derive(Debug)]
 #[brw(big, magic = 90_u8)]
 pub struct ChannelOpen {
-    /// SSH_MSG_REQUEST_SUCCESS's _channel type_.
+    /// Channel type.
     pub channel_type: arch::StringAscii,
 
-    /// SSH_MSG_CHANNEL_OPEN's _sender channel_.
+    /// Sender channel.
     pub sender_channel: u32,
 
-    /// SSH_MSG_CHANNEL_OPEN's _initial window size_.
+    /// Initial window size, in bytes.
     pub initial_window_size: u32,
 
-    /// SSH_MSG_CHANNEL_OPEN's _maximum packet size_.
+    /// Maximum packet size, in bytes.
     pub maximum_packet_size: u32,
 
-    pub data: todo!(),
+    pub data: (),
 }
 
 /// The `SSH_MSG_CHANNEL_OPEN_CONFIRMATION` message.
@@ -70,19 +70,19 @@ pub struct ChannelOpen {
 #[derive(Debug)]
 #[brw(big, magic = 91_u8)]
 pub struct ChannelOpenConfirmation {
-    /// SSH_MSG_CHANNEL_OPEN_CONFIRMATION's _recipient channel_.
+    /// Recipient channel.
     pub recipient_channel: u32,
 
-    /// SSH_MSG_CHANNEL_OPEN_CONFIRMATION's _sender channel_.
+    /// Sender channel.
     pub sender_channel: u32,
 
-    /// SSH_MSG_CHANNEL_OPEN_CONFIRMATION's _initial window size_.
+    /// Initial window size, in bytes.
     pub initial_window_size: u32,
 
-    /// SSH_MSG_CHANNEL_OPEN_CONFIRMATION's _maximum packet size_.
+    /// Maximum packet size, in bytes.
     pub maximum_packet_size: u32,
 
-    pub data: todo!(),
+    pub data: (),
 }
 
 /// The `SSH_MSG_CHANNEL_OPEN_FAILURE` message.
@@ -92,16 +92,16 @@ pub struct ChannelOpenConfirmation {
 #[derive(Debug)]
 #[brw(big, magic = 92_u8)]
 pub struct ChannelOpenFailure {
-    /// SSH_MSG_CHANNEL_OPEN_FAILURE's _recipient channel_.
+    /// Recipient channel.
     pub recipient_channel: u32,
 
-    /// SSH_MSG_CHANNEL_OPEN_FAILURE's _reason code_.
+    /// Reason for the channel opening failure.
     pub reason: ChannelOpenFailureReason,
 
-    /// SSH_MSG_CHANNEL_OPEN_FAILURE's _description_.
+    /// Description of the reason.
     pub description: arch::StringUtf8,
 
-    /// SSH_MSG_CHANNEL_OPEN_FAILURE's _language tag_.
+    /// Language tag.
     pub language: arch::StringAscii,
 }
 
@@ -140,10 +140,10 @@ pub enum ChannelOpenFailureReason {
 #[derive(Debug)]
 #[brw(big, magic = 93_u8)]
 pub struct ChannelWindowAdjust {
-    /// SSH_MSG_CHANNEL_WINDOW_ADJUST's _recipient channel_.
+    /// Recipient channel.
     pub recipient_channel: u32,
 
-    /// SSH_MSG_CHANNEL_WINDOW_ADJUST's _bytes to add to the window_.
+    /// Bytes to add to the window.
     pub bytes_to_add: u32,
 }
 
@@ -154,10 +154,10 @@ pub struct ChannelWindowAdjust {
 #[derive(Debug)]
 #[brw(big, magic = 94_u8)]
 pub struct ChannelData {
-    /// SSH_MSG_CHANNEL_DATA's _recipient channel_.
+    /// Recipient channel.
     pub recipient_channel: u32,
 
-    /// SSH_MSG_CHANNEL_DATA's _bytes to add to the window_.
+    /// Bytes to add to the window.
     pub data: arch::String,
 }
 
@@ -168,13 +168,13 @@ pub struct ChannelData {
 #[derive(Debug)]
 #[brw(big, magic = 95_u8)]
 pub struct ChannelExtendedData {
-    /// SSH_MSG_CHANNEL_EXTENDED_DATA's _recipient channel_.
+    /// Recipient channel.
     pub recipient_channel: u32,
 
-    /// SSH_MSG_CHANNEL_EXTENDED_DATA's _data type's code_.
+    /// Data type's code.
     pub data_type_code: ChannelExtendedDataType,
 
-    /// SSH_MSG_CHANNEL_EXTENDED_DATA's _bytes to add to the window_.
+    /// Bytes to add to the window.
     pub data: arch::String,
 }
 
@@ -201,7 +201,7 @@ pub enum ChannelExtendedDataType {
 #[derive(Debug)]
 #[brw(big, magic = 96_u8)]
 pub struct ChannelEof {
-    /// SSH_MSG_CHANNEL_EOF's _recipient channel_.
+    /// Recipient channel.
     pub recipient_channel: u32,
 }
 
@@ -212,7 +212,7 @@ pub struct ChannelEof {
 #[derive(Debug)]
 #[brw(big, magic = 97_u8)]
 pub struct ChannelClose {
-    /// SSH_MSG_CHANNEL_CLOSE's _recipient channel_.
+    /// Recipient channel.
     pub recipient_channel: u32,
 }
 
@@ -223,17 +223,17 @@ pub struct ChannelClose {
 #[derive(Debug)]
 #[brw(big, magic = 98_u8)]
 pub struct ChannelRequest {
-    /// SSH_MSG_CHANNEL_REQUEST's _recipient channel_.
+    /// Recipient channel.
     pub recipient_channel: u32,
 
-    /// SSH_MSG_CHANNEL_REQUEST's _request type_.
+    /// Request type.
     pub request_type: arch::StringAscii,
 
-    /// SSH_MSG_CHANNEL_REQUEST's _want reply_.
+    /// Whether the sender wants a reply.
     pub want_reply: arch::Bool,
 
-    /// SSH_MSG_CHANNEL_REQUEST's _request-specific data_.
-    pub data: todo!(),
+    /// Request-specific data.
+    pub data: (),
 }
 
 /// The `SSH_MSG_CHANNEL_SUCCESS` message.
@@ -243,7 +243,7 @@ pub struct ChannelRequest {
 #[derive(Debug)]
 #[brw(big, magic = 99_u8)]
 pub struct ChannelSuccess {
-    /// SSH_MSG_CHANNEL_SUCCESS's _recipient channel_.
+    /// Recipient channel.
     pub recipient_channel: u32,
 }
 
@@ -254,6 +254,6 @@ pub struct ChannelSuccess {
 #[derive(Debug)]
 #[brw(big, magic = 100_u8)]
 pub struct ChannelFailure {
-    /// SSH_MSG_CHANNEL_FAILURE's _recipient channel_.
+    /// Recipient channel.
     pub recipient_channel: u32,
 }

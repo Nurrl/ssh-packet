@@ -12,16 +12,16 @@ use crate::arch;
 #[derive(Debug)]
 #[brw(big, magic = 50_u8)]
 pub struct AuthRequest {
-    /// SSH_MSG_USERAUTH_REQUEST's _username_.
+    /// Username for the auth request.
     pub username: arch::StringUtf8,
 
-    /// SSH_MSG_USERAUTH_REQUEST's _service name_.
+    /// Service name to query.
     pub service_name: arch::StringAscii,
 
     #[bw(calc = arch::StringAscii::new(method.as_str()))]
     auth_method: arch::StringAscii,
 
-    /// SSH_MSG_USERAUTH_REQUEST's _method_.
+    /// Authentication method used.
     #[br(args(&auth_method))]
     pub method: AuthMethod,
 }
@@ -102,10 +102,10 @@ impl AuthMethod {
 #[derive(Debug)]
 #[brw(big, magic = 60_u8)]
 pub struct AuthPkOk {
-    /// SSH_MSG_USERAUTH_PK_OK's _public key algorithm name from the request_.
+    /// Public key algorithm name from the request.
     pub algorithm: arch::String,
 
-    /// SSH_MSG_USERAUTH_PK_OK's _public key blob from the request_.
+    /// Public key blob from the request.
     pub blob: arch::String,
 }
 
@@ -116,10 +116,10 @@ pub struct AuthPkOk {
 #[derive(Debug)]
 #[brw(big, magic = 60_u8)]
 pub struct AuthPasswdChangereq {
-    /// SSH_MSG_USERAUTH_PASSWD_CHANGEREQ's _prompt_.
+    /// Password change prompt.
     pub prompt: arch::StringUtf8,
 
-    /// SSH_MSG_USERAUTH_PASSWD_CHANGEREQ's _language tag_ (deprecated).
+    /// Language tag (deprecated).
     pub language: arch::StringAscii,
 }
 
@@ -130,19 +130,19 @@ pub struct AuthPasswdChangereq {
 #[derive(Debug)]
 #[brw(big, magic = 60_u8)]
 pub struct AuthInfoRequest {
-    /// SSH_MSG_USERAUTH_INFO_REQUEST's _name_.
+    /// Name of the challenge.
     pub name: arch::StringUtf8,
 
-    /// SSH_MSG_USERAUTH_INFO_REQUEST's _instruction_.
+    /// Instructions for the challenge.
     pub instruction: arch::StringUtf8,
 
-    /// SSH_MSG_USERAUTH_INFO_REQUEST's _language tag_ (deprecated).
+    /// Language tag (deprecated).
     pub language: arch::StringAscii,
 
     #[bw(calc = prompts.len() as u32)]
     num_prompts: u32,
 
-    /// SSH_MSG_USERAUTH_INFO_REQUEST's _prompts_.
+    /// The challenge's prompts.
     #[br(count = num_prompts)]
     pub prompts: Vec<AuthInfoRequestPrompt>,
 }
@@ -152,10 +152,10 @@ pub struct AuthInfoRequest {
 #[derive(Debug)]
 #[brw(big)]
 pub struct AuthInfoRequestPrompt {
-    /// SSH_MSG_USERAUTH_INFO_REQUEST's _prompt text_.
+    /// Challenge prompt text.
     pub prompt: arch::StringUtf8,
 
-    /// SSH_MSG_USERAUTH_INFO_REQUEST's _echo_.
+    /// Whether the client should echo back typed characters.
     pub echo: arch::Bool,
 }
 
@@ -169,7 +169,7 @@ pub struct AuthInfoResponse {
     #[bw(calc = responses.len() as u32)]
     num_responses: u32,
 
-    /// SSH_MSG_USERAUTH_INFO_RESPONSE's _responses_.
+    /// Responses to the provided challenge.
     #[br(count = num_responses)]
     pub responses: Vec<arch::StringUtf8>,
 }
@@ -181,10 +181,10 @@ pub struct AuthInfoResponse {
 #[derive(Debug)]
 #[brw(big, magic = 51_u8)]
 pub struct AuthFailure {
-    /// SSH_MSG_USERAUTH_FAILURE's _authentications that can continue_.
+    /// Authentications that can continue.
     pub continue_with: arch::NameList,
 
-    /// SSH_MSG_USERAUTH_FAILURE's _partial success_.
+    /// Partial success.
     pub partial_success: arch::Bool,
 }
 
@@ -203,9 +203,9 @@ pub struct AuthSuccess;
 #[derive(Debug)]
 #[brw(big, magic = 53_u8)]
 pub struct AuthBanner {
-    /// SSH_MSG_USERAUTH_BANNER's _message_.
+    /// The auth banner message.
     pub message: arch::StringUtf8,
 
-    /// SSH_MSG_USERAUTH_BANNER's _language tag_.
+    /// Language tag.
     pub language: arch::StringAscii,
 }

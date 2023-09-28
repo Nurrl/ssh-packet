@@ -4,7 +4,12 @@
 Representations of SSH packets interoperable with their binary
 wire representation, using [binrw](https://docs.rs/binrw).
 
-see [RFC4250](https://datatracker.ietf.org/doc/html/rfc4250).
+This includes a partial implementation of:
+- [RFC4250: SSH Protocol Assigned Numbers](https://datatracker.ietf.org/doc/html/rfc4250).
+- [RFC4251: SSH Protocol Architecture](https://datatracker.ietf.org/doc/html/rfc4251).
+- [RFC4252: SSH Authentication Protocol](https://datatracker.ietf.org/doc/html/rfc4252).
+- [RFC4253: SSH Transport Layer Protocol](https://datatracker.ietf.org/doc/html/rfc4253).
+- [RFC4254: SSH Connection Protocol](https://datatracker.ietf.org/doc/html/rfc4254).
 
 ---
 
