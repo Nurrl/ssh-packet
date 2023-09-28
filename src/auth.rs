@@ -31,6 +31,9 @@ pub struct AuthRequest {
 #[derive(Debug)]
 #[br(import(method: &str))]
 pub enum AuthMethod {
+    #[br(pre_assert(method == AuthMethod::NONE))]
+    None,
+
     /// Authenticate using the `publickey` method,
     /// as defined in [RFC4252 section 7](https://datatracker.ietf.org/doc/html/rfc4252#section-7).
     #[br(pre_assert(method == AuthMethod::PUBLICKEY))]
@@ -79,6 +82,7 @@ pub enum AuthMethod {
 }
 
 impl AuthMethod {
+    const NONE: &str = "none";
     const PUBLICKEY: &str = "publickey";
     const PASSWORD: &str = "password";
     const HOSTBASED: &str = "hostbased";
@@ -87,6 +91,7 @@ impl AuthMethod {
     /// Transforms the [`AuthMethod`] to it's SSH identifier.
     pub fn as_str(&self) -> &'static str {
         match self {
+            Self::None { .. } => Self::NONE,
             Self::Publickey { .. } => Self::PUBLICKEY,
             Self::Password { .. } => Self::PASSWORD,
             Self::Hostbased { .. } => Self::HOSTBASED,
