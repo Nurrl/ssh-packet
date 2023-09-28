@@ -1,9 +1,4 @@
-//! # `ssh-packet`
-//!
-//! Representations of SSH packets interoperable with their binary
-//! wire representation.
-//!
-//! see [RFC4250](https://datatracker.ietf.org/doc/html/rfc4250).
+#![doc = include_str!("../README.md")]
 
 use binrw::{binrw, helpers};
 
