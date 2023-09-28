@@ -89,7 +89,7 @@ pub enum DisconnectReason {
 
     /// Any other disconnect reason, may be non-standard.
     ///
-    /// The 'reason code' values in the range of `0xFE000000`
+    /// The 'reason' values in the range of `0xFE000000`
     /// through `0xFFFFFFFF` are reserved for PRIVATE USE.
     Other(u32),
 }
