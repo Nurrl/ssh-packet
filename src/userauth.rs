@@ -109,7 +109,7 @@ impl UserauthMethod {
     const HOSTBASED: &str = "hostbased";
     const KEYBOARD_INTERACTIVE: &str = "keyboard-interactive";
 
-    /// Transforms the [`UserauthMethod`] to it's SSH identifier.
+    /// Get the [`UserauthMethod`]'s SSH identifier.
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::None { .. } => Self::NONE,
