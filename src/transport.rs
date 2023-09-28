@@ -3,7 +3,7 @@
 
 use binrw::binrw;
 
-use crate::SshString;
+use crate::arch;
 
 /// The `SSH_MSG_DISCONNECT` message.
 ///
@@ -16,10 +16,10 @@ pub struct Disconnect {
     pub reason: DisconnectReason,
 
     /// SSH_MSG_DISCONNECT's _description_.
-    pub description: SshString,
+    pub description: arch::StringUtf8,
 
     /// SSH_MSG_DISCONNECT's _language tag_.
-    pub language: SshString,
+    pub language: arch::StringAscii,
 }
 
 /// The `reason` for disconnect in the `SSH_MSG_DISCONNECT` message.
@@ -102,7 +102,7 @@ pub enum DisconnectReason {
 #[brw(big, magic = 2_u8)]
 pub struct Ignore {
     /// SSH_MSG_IGNORE's _data_.
-    pub data: SshString,
+    pub data: arch::String,
 }
 
 /// The `SSH_MSG_DEBUG` message.
@@ -113,15 +113,13 @@ pub struct Ignore {
 #[brw(big, magic = 4_u8)]
 pub struct Debug {
     /// SSH_MSG_DEBUG's _always_display_.
-    #[br(map = |n: u8| n != 0)]
-    #[bw(map = |b| u8::from(*b))]
-    pub always_display: bool,
+    pub always_display: arch::Bool,
 
     /// SSH_MSG_DEBUG's _message_.
-    pub message: SshString,
+    pub message: arch::StringUtf8,
 
     /// SSH_MSG_DEBUG's _language_.
-    pub language: SshString,
+    pub language: arch::StringAscii,
 }
 
 /// The `SSH_MSG_UNIMPLEMENTED` message.
@@ -168,39 +166,37 @@ pub struct KexInit {
     pub cookie: [u8; 16],
 
     /// SSH_MSG_KEXINIT's _kex_algorithms_.
-    pub kex_algorithms: SshString,
+    pub kex_algorithms: arch::NameList,
 
     /// SSH_MSG_KEXINIT's _server_host_key_algorithms_.
-    pub server_host_key_algorithms: SshString,
+    pub server_host_key_algorithms: arch::NameList,
 
     /// SSH_MSG_KEXINIT's _encryption_algorithms_client_to_server_.
-    pub encryption_algorithms_client_to_server: SshString,
+    pub encryption_algorithms_client_to_server: arch::NameList,
 
     /// SSH_MSG_KEXINIT's _encryption_algorithms_server_to_client_.
-    pub encryption_algorithms_server_to_client: SshString,
+    pub encryption_algorithms_server_to_client: arch::NameList,
 
     /// SSH_MSG_KEXINIT's _mac_algorithms_client_to_server_.
-    pub mac_algorithms_client_to_server: SshString,
+    pub mac_algorithms_client_to_server: arch::NameList,
 
     /// SSH_MSG_KEXINIT's _mac_algorithms_server_to_client_.
-    pub mac_algorithms_server_to_client: SshString,
+    pub mac_algorithms_server_to_client: arch::NameList,
 
     /// SSH_MSG_KEXINIT's _compression_algorithms_client_to_server_.
-    pub compression_algorithms_client_to_server: SshString,
+    pub compression_algorithms_client_to_server: arch::NameList,
 
     /// SSH_MSG_KEXINIT's _compression_algorithms_server_to_client_.
-    pub compression_algorithms_server_to_client: SshString,
+    pub compression_algorithms_server_to_client: arch::NameList,
 
     /// SSH_MSG_KEXINIT's _languages_client_to_server_.
-    pub languages_client_to_server: SshString,
+    pub languages_client_to_server: arch::NameList,
 
     /// SSH_MSG_KEXINIT's _languages_server_to_client_.
-    pub languages_server_to_client: SshString,
+    pub languages_server_to_client: arch::NameList,
 
     /// SSH_MSG_KEXINIT's _first_kex_packet_follows_.
-    #[br(map = |n: u8| n != 0)]
-    #[bw(map = |b| u8::from(*b))]
-    pub first_kex_packet_follows: bool,
+    pub first_kex_packet_follows: arch::Bool,
 
     reserved: u32,
 }
