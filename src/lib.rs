@@ -2,7 +2,7 @@
 
 use binrw::{binrw, helpers};
 
-pub use binrw::{BinRead, BinWrite, Error};
+pub use ::binrw;
 
 pub mod arch;
 pub mod connect;
