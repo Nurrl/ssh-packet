@@ -40,7 +40,7 @@ pub enum UserauthMethod {
     /// as defined in [RFC4252 section 7](https://datatracker.ietf.org/doc/html/rfc4252#section-7).
     #[br(pre_assert(method == UserauthMethod::PUBLICKEY))]
     Publickey {
-        #[bw(calc = arch::Bool(signature.is_some()))]
+        #[bw(calc = arch::Bool::from(signature.is_some()))]
         signed: arch::Bool,
 
         /// Public key algorithm's name.
@@ -58,7 +58,7 @@ pub enum UserauthMethod {
     /// as defined in [RFC4252 section 8](https://datatracker.ietf.org/doc/html/rfc4252#section-8).
     #[br(pre_assert(method == UserauthMethod::PASSWORD))]
     Password {
-        #[bw(calc = arch::Bool(new.is_some()))]
+        #[bw(calc = arch::Bool::from(new.is_some()))]
         change: arch::Bool,
 
         /// Plaintext password.

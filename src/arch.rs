@@ -46,6 +46,7 @@ pub struct StringUtf8 {
 }
 
 impl StringUtf8 {
+    /// Create a new [`StringUtf8`] from a [`Cow`].
     pub fn new(s: impl Into<Cow<'static, str>>) -> Self {
         Self { payload: s.into() }
     }
@@ -78,6 +79,7 @@ pub struct StringAscii {
 }
 
 impl StringAscii {
+    /// Create a new [`StringAscii`] from a [`Cow`].
     pub fn new(s: impl Into<Cow<'static, str>>) -> Self {
         Self { payload: s.into() }
     }
@@ -110,7 +112,7 @@ pub struct NameList(StringAscii);
 pub struct Bool(
     #[br(map = |n: u8| n > 0)]
     #[bw(map = |b| u8::from(*b))]
-    pub bool,
+    bool,
 );
 
 impl std::ops::Not for Bool {
@@ -126,5 +128,11 @@ impl std::ops::Deref for Bool {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl std::convert::From<bool> for Bool {
+    fn from(value: bool) -> Self {
+        Self(value)
     }
 }

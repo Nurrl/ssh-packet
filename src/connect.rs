@@ -33,7 +33,10 @@ pub enum GlobalRequestContext {
     /// as defined in [RFC4254 section 7.1](https://datatracker.ietf.org/doc/html/rfc4254#section-7.1).
     #[br(pre_assert(kind == GlobalRequestContext::TCPIP_FORWARD))]
     TcpipForward {
+        /// Address to bind on the remote.
         bind_address: arch::String,
+
+        /// Port to bind on the remote, randomly choosen if 0.
         bind_port: u32,
     },
 
@@ -41,7 +44,10 @@ pub enum GlobalRequestContext {
     /// as defined in [RFC4254 section 7.1](https://datatracker.ietf.org/doc/html/rfc4254#section-7.1).
     #[br(pre_assert(kind == GlobalRequestContext::CANCEL_TCPIP_FORWARD))]
     CancelTcpipForward {
+        /// Address that was bound on the remote.
         bind_address: arch::String,
+
+        /// Port that was bound on the remote.
         bind_port: u32,
     },
 }
@@ -70,7 +76,7 @@ pub struct RequestSuccess {
     pub context: RequestSuccessContext,
 }
 
-/// The `context` in the `SSH_MSG_GLOBAL_REQUEST` message.
+/// The `context` in the `SSH_MSG_REQUEST_SUCCESS` message.
 #[binrw]
 #[derive(Debug)]
 #[brw(big)]
@@ -81,7 +87,10 @@ pub enum RequestSuccessContext {
     /// A reponse to a `tcpip-forward` or a `cancel-tcpip-forward`,
     /// if the provided port was `0` and `want_reply` was [`true`],
     /// as defined in [RFC4254 section 7.1](https://datatracker.ietf.org/doc/html/rfc4254#section-7.1).
-    BoundPort { bound_port: u32 },
+    BoundPort {
+        /// Port that was bound on the remote.
+        bound_port: u32,
+    },
 }
 
 /// The `SSH_MSG_REQUEST_FAILURE` message.
@@ -131,7 +140,10 @@ pub enum ChannelOpenContext {
     /// as defined in [RFC4254 section 6.3.2](https://datatracker.ietf.org/doc/html/rfc4254#section-6.3.2).
     #[br(pre_assert(kind == ChannelOpenContext::X11))]
     X11 {
+        /// Originator address.
         originator_address: arch::StringAscii,
+
+        /// Originator port.
         originator_port: u32,
     },
 
@@ -139,9 +151,16 @@ pub enum ChannelOpenContext {
     /// as defined in [RFC4254 section 7.2](https://datatracker.ietf.org/doc/html/rfc4254#section-7.2).
     #[br(pre_assert(kind == ChannelOpenContext::FORWARDED_TCPIP))]
     ForwardedTcpip {
+        /// Address that was connected on the remote.
         address: arch::StringAscii,
+
+        /// Port that was connected on the remote.
         port: u32,
+
+        /// Originator address.
         originator_address: arch::StringAscii,
+
+        /// Originator port.
         originator_port: u32,
     },
 
@@ -149,9 +168,16 @@ pub enum ChannelOpenContext {
     /// as defined in [RFC4254 section 7.2](https://datatracker.ietf.org/doc/html/rfc4254#section-7.2).
     #[br(pre_assert(kind == ChannelOpenContext::DIRECT_TCPIP))]
     DirectTcpip {
+        /// Address to connect to.
         address: arch::StringAscii,
+
+        /// Port to connect to.
         port: u32,
+
+        /// Originator address.
         originator_address: arch::StringAscii,
+
+        /// Originator port.
         originator_port: u32,
     },
 }
@@ -355,11 +381,22 @@ pub enum ChannelRequestContext {
     /// as defined in [RFC4254 section 6.2](https://datatracker.ietf.org/doc/html/rfc4254#section-6.2).
     #[br(pre_assert(kind == ChannelRequestContext::PTY))]
     Pty {
+        /// Peer's `$TERM` environment variable value.
         term: arch::String,
+
+        /// Terminal width, in columns.
         width_chars: u32,
+
+        /// Terminal height, in rows.
         height_chars: u32,
+
+        /// Terminal width, in pixels.
         width_pixels: u32,
+
+        /// Terminal height, in pixels.
         height_pixels: u32,
+
+        /// Encoded terminal modes.
         modes: arch::String,
     },
 
@@ -367,9 +404,16 @@ pub enum ChannelRequestContext {
     /// as defined in [RFC4254 section 6.3](https://datatracker.ietf.org/doc/html/rfc4254#section-6.3).
     #[br(pre_assert(kind == ChannelRequestContext::X11))]
     X11 {
+        /// Whether only a single connection should be forwarded.
         single_connection: arch::Bool,
+
+        /// X11 authentication protocol.
         x11_authentication_protocol: arch::String,
+
+        /// X11 authentication cookie.
         x11_authentication_cookie: arch::String,
+
+        /// X11 authentication number.
         x11_screen_number: u32,
     },
 
@@ -377,7 +421,10 @@ pub enum ChannelRequestContext {
     /// as defined in [RFC4254 section 6.4](https://datatracker.ietf.org/doc/html/rfc4254#section-6.4).
     #[br(pre_assert(kind == ChannelRequestContext::ENV))]
     Env {
+        /// Environment variable name.
         name: arch::String,
+
+        /// Environment variable value.
         value: arch::String,
     },
 
@@ -389,45 +436,74 @@ pub enum ChannelRequestContext {
     /// A request of type `exec`,
     /// as defined in [RFC4254 section 6.5](https://datatracker.ietf.org/doc/html/rfc4254#section-6.5).
     #[br(pre_assert(kind == ChannelRequestContext::EXEC))]
-    Exec { command: arch::String },
+    Exec {
+        /// Command to be executed.
+        command: arch::String,
+    },
 
     /// A request of type `subsystem`,
     /// as defined in [RFC4254 section 6.5](https://datatracker.ietf.org/doc/html/rfc4254#section-6.5).
     #[br(pre_assert(kind == ChannelRequestContext::SUBSYSTEM))]
-    Subsystem { name: arch::String },
+    Subsystem {
+        /// Name of the requested subsystem.
+        name: arch::String,
+    },
 
     /// A request of type `window-change`,
     /// as defined in [RFC4254 section 6.7](https://datatracker.ietf.org/doc/html/rfc4254#section-6.7).
     #[br(pre_assert(kind == ChannelRequestContext::WINDOW_CHANGE))]
     WindowChange {
+        /// Terminal width, in columns.
         width_chars: u32,
+
+        /// Terminal height, in rows.
         height_chars: u32,
+
+        /// Terminal width, in pixels.
         width_pixels: u32,
+
+        /// Terminal height, in pixels.
         height_pixels: u32,
     },
 
     /// A request of type `xon-xoff`,
     /// as defined in [RFC4254 section 6.8](hhttps://datatracker.ietf.org/doc/html/rfc4254#section-6.8).
     #[br(pre_assert(kind == ChannelRequestContext::XON_XOFF))]
-    XonXoff { client_can_do: arch::Bool },
+    XonXoff {
+        /// Whether the client is allowed to do flow control using `<CTRL>-<S>` and `<CTRL>-<Q>`.
+        client_can_do: arch::Bool,
+    },
 
     /// A request of type `signal`,
     /// as defined in [RFC4254 section 6.9](hhttps://datatracker.ietf.org/doc/html/rfc4254#section-6.9).
     #[br(pre_assert(kind == ChannelRequestContext::SIGNAL))]
-    Signal { name: arch::String },
+    Signal {
+        /// Signal name (without the "SIG" prefix).
+        name: arch::String,
+    },
 
     /// A request of type `exit-status`,
     /// as defined in [RFC4254 section 6.10](hhttps://datatracker.ietf.org/doc/html/rfc4254#section-6.10).
     #[br(pre_assert(kind == ChannelRequestContext::EXIT_STATUS))]
-    ExitStatus { code: u32 },
+    ExitStatus {
+        /// Exit status, non-zero means failure.
+        code: u32,
+    },
 
     /// A request of type `exit-signal`,
     /// as defined in [RFC4254 section 6.10](hhttps://datatracker.ietf.org/doc/html/rfc4254#section-6.10).
     #[br(pre_assert(kind == ChannelRequestContext::EXIT_SIGNAL))]
     ExitSignal {
+        /// Signal name (without the "SIG" prefix).
         name: arch::String,
+
+        /// Whether a core dump is triggering the signal.
         core_dumped: arch::Bool,
+
+        /// The error message for the signal.
         error_message: arch::StringUtf8,
+
+        /// Language tag.
         language: arch::StringAscii,
     },
 }
