@@ -10,7 +10,7 @@ This includes a partial implementation of:
 - [RFC4252: SSH Authentication Protocol](https://datatracker.ietf.org/doc/html/rfc4252).
 - [RFC4253: SSH Transport Layer Protocol](https://datatracker.ietf.org/doc/html/rfc4253).
 - [RFC4254: SSH Connection Protocol](https://datatracker.ietf.org/doc/html/rfc4254).
-- [RFC4256: Generic Message Exchange Authentication for SSH](https://datatracker.ietf.org/doc/html/rfc4256)
+- [RFC4256: Generic Message Exchange Authentication for SSH](https://datatracker.ietf.org/doc/html/rfc4256).
 
 ---
 

@@ -1,4 +1,4 @@
-//! Messages involved in the SSH's **transport** part of the protocol,
+//! Messages involved in the SSH's **transport** (`SSH-TRANS`) part of the protocol,
 //! as defined in the [RFC 4253](https://datatracker.ietf.org/doc/html/rfc4253).
 
 use binrw::binrw;

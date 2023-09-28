@@ -5,9 +5,9 @@ use binrw::{binrw, helpers};
 pub use binrw::{BinRead, BinWrite, Error};
 
 pub mod arch;
-pub mod auth;
 pub mod connect;
-pub mod transport;
+pub mod trans;
+pub mod userauth;
 
 /// A SSH 2.0 binary packet representation, including it's encrypted payload.
 ///

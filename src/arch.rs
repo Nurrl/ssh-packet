@@ -1,4 +1,4 @@
-//! Types defined in the SSH's **architecture** part of the protocol,
+//! Types defined in the SSH's **architecture** (`SSH-ARCH`) part of the protocol,
 //! as defined in the [RFC 4251](https://datatracker.ietf.org/doc/html/rfc4251).
 
 use std::{borrow::Cow, string::String as StdString};

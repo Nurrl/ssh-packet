@@ -1,4 +1,4 @@
-//! Messages involved in the SSH's **authentication** part of the protocol,
+//! Messages involved in the SSH's **authentication** (`SSH-USERAUTH`) part of the protocol,
 //! as defined in the [RFC 4252](https://datatracker.ietf.org/doc/html/rfc4252) and [RFC 4256](https://datatracker.ietf.org/doc/html/rfc4256).
 
 use binrw::binrw;
@@ -11,7 +11,7 @@ use crate::arch;
 #[binrw]
 #[derive(Debug)]
 #[brw(big, magic = 50_u8)]
-pub struct AuthRequest {
+pub struct UserauthRequest {
     /// Username for the auth request.
     pub username: arch::StringUtf8,
 
@@ -23,22 +23,22 @@ pub struct AuthRequest {
 
     /// Authentication method used.
     #[br(args(&auth_method))]
-    pub method: AuthMethod,
+    pub method: UserauthMethod,
 }
 
 /// The Authentication method in the `SSH_MSG_USERAUTH_REQUEST` message.
 #[binrw]
 #[derive(Debug)]
 #[br(import(method: &str))]
-pub enum AuthMethod {
+pub enum UserauthMethod {
     /// Authenticate using the `none` method,
     /// as defined in [RFC4252 section 5.2](https://datatracker.ietf.org/doc/html/rfc4252#section-5.2).
-    #[br(pre_assert(method == AuthMethod::NONE))]
+    #[br(pre_assert(method == UserauthMethod::NONE))]
     None,
 
     /// Authenticate using the `publickey` method,
     /// as defined in [RFC4252 section 7](https://datatracker.ietf.org/doc/html/rfc4252#section-7).
-    #[br(pre_assert(method == AuthMethod::PUBLICKEY))]
+    #[br(pre_assert(method == UserauthMethod::PUBLICKEY))]
     Publickey {
         #[bw(calc = arch::Bool(signature.is_some()))]
         signed: arch::Bool,
@@ -56,7 +56,7 @@ pub enum AuthMethod {
 
     /// Authenticate using the `password` method,
     /// as defined in [RFC4252 section 8](https://datatracker.ietf.org/doc/html/rfc4252#section-8).
-    #[br(pre_assert(method == AuthMethod::PASSWORD))]
+    #[br(pre_assert(method == UserauthMethod::PASSWORD))]
     Password {
         #[bw(calc = arch::Bool(new.is_some()))]
         change: arch::Bool,
@@ -64,7 +64,7 @@ pub enum AuthMethod {
         /// Plaintext password.
         password: arch::StringUtf8,
 
-        /// In the case of a the receival of a [`AuthPasswdChangereq`],
+        /// In the case of a the receival of a [`UserauthPasswdChangereq`],
         /// the new password to be set in place of the old one.
         #[br(if(*change))]
         new: Option<arch::StringUtf8>,
@@ -72,7 +72,7 @@ pub enum AuthMethod {
 
     /// Authenticate using the `hostbased` method,
     /// as defined in [RFC4252 section 9](https://datatracker.ietf.org/doc/html/rfc4252#section-9).
-    #[br(pre_assert(method == AuthMethod::HOSTBASED))]
+    #[br(pre_assert(method == UserauthMethod::HOSTBASED))]
     Hostbased {
         /// Public key algorithm for the host key.
         algorithm: arch::String,
@@ -92,7 +92,7 @@ pub enum AuthMethod {
 
     /// Authenticate using the `keyboard-interactive` method,
     /// as defined in [RFC4256 section 3.1](https://datatracker.ietf.org/doc/html/rfc4256#section-3.1).
-    #[br(pre_assert(method == AuthMethod::KEYBOARD_INTERACTIVE))]
+    #[br(pre_assert(method == UserauthMethod::KEYBOARD_INTERACTIVE))]
     KeyboardInteractive {
         /// Language tag.
         language: arch::StringAscii,
@@ -102,14 +102,14 @@ pub enum AuthMethod {
     },
 }
 
-impl AuthMethod {
+impl UserauthMethod {
     const NONE: &str = "none";
     const PUBLICKEY: &str = "publickey";
     const PASSWORD: &str = "password";
     const HOSTBASED: &str = "hostbased";
     const KEYBOARD_INTERACTIVE: &str = "keyboard-interactive";
 
-    /// Transforms the [`AuthMethod`] to it's SSH identifier.
+    /// Transforms the [`UserauthMethod`] to it's SSH identifier.
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::None { .. } => Self::NONE,
@@ -127,7 +127,7 @@ impl AuthMethod {
 #[binrw]
 #[derive(Debug)]
 #[brw(big, magic = 60_u8)]
-pub struct AuthPkOk {
+pub struct UserauthPkOk {
     /// Public key algorithm name from the request.
     pub algorithm: arch::String,
 
@@ -141,7 +141,7 @@ pub struct AuthPkOk {
 #[binrw]
 #[derive(Debug)]
 #[brw(big, magic = 60_u8)]
-pub struct AuthPasswdChangereq {
+pub struct UserauthPasswdChangereq {
     /// Password change prompt.
     pub prompt: arch::StringUtf8,
 
@@ -155,7 +155,7 @@ pub struct AuthPasswdChangereq {
 #[binrw]
 #[derive(Debug)]
 #[brw(big, magic = 60_u8)]
-pub struct AuthInfoRequest {
+pub struct UserauthInfoRequest {
     /// Name of the challenge.
     pub name: arch::StringUtf8,
 
@@ -170,14 +170,14 @@ pub struct AuthInfoRequest {
 
     /// The challenge's prompts.
     #[br(count = num_prompts)]
-    pub prompts: Vec<AuthInfoRequestPrompt>,
+    pub prompts: Vec<UserauthInfoRequestPrompt>,
 }
 
 /// A prompt in the `SSH_MSG_USERAUTH_INFO_REQUEST` message.
 #[binrw]
 #[derive(Debug)]
 #[brw(big)]
-pub struct AuthInfoRequestPrompt {
+pub struct UserauthInfoRequestPrompt {
     /// Challenge prompt text.
     pub prompt: arch::StringUtf8,
 
@@ -191,7 +191,7 @@ pub struct AuthInfoRequestPrompt {
 #[binrw]
 #[derive(Debug)]
 #[brw(big, magic = 61_u8)]
-pub struct AuthInfoResponse {
+pub struct UserauthInfoResponse {
     #[bw(calc = responses.len() as u32)]
     num_responses: u32,
 
@@ -206,7 +206,7 @@ pub struct AuthInfoResponse {
 #[binrw]
 #[derive(Debug)]
 #[brw(big, magic = 51_u8)]
-pub struct AuthFailure {
+pub struct UserauthFailure {
     /// Authentications that can continue.
     pub continue_with: arch::NameList,
 
@@ -220,7 +220,7 @@ pub struct AuthFailure {
 #[binrw]
 #[derive(Debug)]
 #[brw(big, magic = 52_u8)]
-pub struct AuthSuccess;
+pub struct UserauthSuccess;
 
 /// The `SSH_MSG_USERAUTH_BANNER` message.
 ///
@@ -228,7 +228,7 @@ pub struct AuthSuccess;
 #[binrw]
 #[derive(Debug)]
 #[brw(big, magic = 53_u8)]
-pub struct AuthBanner {
+pub struct UserauthBanner {
     /// The auth banner message.
     pub message: arch::StringUtf8,
 
