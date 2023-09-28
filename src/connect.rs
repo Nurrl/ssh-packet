@@ -12,14 +12,51 @@ use crate::arch;
 #[derive(Debug)]
 #[brw(big, magic = 80_u8)]
 pub struct GlobalRequest {
-    /// Global request's name.
-    pub name: arch::StringAscii,
+    #[bw(calc = arch::StringAscii::new(context.as_str()))]
+    kind: arch::StringAscii,
 
     /// Whether the sender wants a reply.
     pub want_reply: arch::Bool,
 
-    /// Request-specific data.
-    pub data: (),
+    /// The context of the global request.
+    #[br(args(&kind))]
+    pub context: GlobalRequestContext,
+}
+
+/// The `context` in the `SSH_MSG_GLOBAL_REQUEST` message.
+#[binrw]
+#[derive(Debug)]
+#[brw(big)]
+#[br(import(kind: &str))]
+pub enum GlobalRequestContext {
+    /// A request of type `tcpip-forward`,
+    /// as defined in [RFC4254 section 7.1](https://datatracker.ietf.org/doc/html/rfc4254#section-7.1).
+    #[br(pre_assert(kind == GlobalRequestContext::TCPIP_FORWARD))]
+    TcpipForward {
+        bind_address: arch::String,
+        bind_port: u32,
+    },
+
+    /// A request of type `cancel-tcpip-forward`,
+    /// as defined in [RFC4254 section 7.1](https://datatracker.ietf.org/doc/html/rfc4254#section-7.1).
+    #[br(pre_assert(kind == GlobalRequestContext::CANCEL_TCPIP_FORWARD))]
+    CancelTcpipForward {
+        bind_address: arch::String,
+        bind_port: u32,
+    },
+}
+
+impl GlobalRequestContext {
+    const TCPIP_FORWARD: &str = "tcpip-forward";
+    const CANCEL_TCPIP_FORWARD: &str = "cancel-tcpip-forward";
+
+    /// Get the [`GlobalRequestContext`]'s SSH identifier.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::TcpipForward { .. } => Self::TCPIP_FORWARD,
+            Self::CancelTcpipForward { .. } => Self::CANCEL_TCPIP_FORWARD,
+        }
+    }
 }
 
 /// The `SSH_MSG_REQUEST_SUCCESS` message.
@@ -29,8 +66,22 @@ pub struct GlobalRequest {
 #[derive(Debug)]
 #[brw(big, magic = 81_u8)]
 pub struct RequestSuccess {
-    /// Response-specific data.
-    pub data: (),
+    /// The context of the global response.
+    pub context: RequestSuccessContext,
+}
+
+/// The `context` in the `SSH_MSG_GLOBAL_REQUEST` message.
+#[binrw]
+#[derive(Debug)]
+#[brw(big)]
+pub enum RequestSuccessContext {
+    /// An empty response context for standard global requests.
+    Empty,
+
+    /// A reponse to a `tcpip-forward` or a `cancel-tcpip-forward`,
+    /// if the provided port was `0` and `want_reply` was [`true`],
+    /// as defined in [RFC4254 section 7.1](https://datatracker.ietf.org/doc/html/rfc4254#section-7.1).
+    BoundPort { bound_port: u32 },
 }
 
 /// The `SSH_MSG_REQUEST_FAILURE` message.
@@ -48,8 +99,8 @@ pub struct RequestFailure;
 #[derive(Debug)]
 #[brw(big, magic = 90_u8)]
 pub struct ChannelOpen {
-    #[bw(calc = arch::StringAscii::new(kind.as_str()))]
-    channel_kind: arch::StringAscii,
+    #[bw(calc = arch::StringAscii::new(context.as_str()))]
+    kind: arch::StringAscii,
 
     /// Sender channel.
     pub sender_channel: u32,
@@ -60,25 +111,25 @@ pub struct ChannelOpen {
     /// Maximum packet size, in bytes.
     pub maximum_packet_size: u32,
 
-    /// The kind of channel requested.
-    #[br(args(&channel_kind))]
-    pub kind: ChannelOpenKind,
+    /// The context of the open request.
+    #[br(args(&kind))]
+    pub context: ChannelOpenContext,
 }
 
-/// The `kind` in the `SSH_MSG_CHANNEL_OPEN` message.
+/// The `context` in the `SSH_MSG_CHANNEL_OPEN` message.
 #[binrw]
 #[derive(Debug)]
 #[brw(big)]
 #[br(import(kind: &str))]
-pub enum ChannelOpenKind {
+pub enum ChannelOpenContext {
     /// A channel of type `session`,
     /// as defined in [RFC4254 section 6.1](https://datatracker.ietf.org/doc/html/rfc4254#section-6.1).
-    #[br(pre_assert(kind == ChannelOpenKind::SESSION))]
+    #[br(pre_assert(kind == ChannelOpenContext::SESSION))]
     Session,
 
     /// A channel of type `x11`,
     /// as defined in [RFC4254 section 6.3.2](https://datatracker.ietf.org/doc/html/rfc4254#section-6.3.2).
-    #[br(pre_assert(kind == ChannelOpenKind::X11))]
+    #[br(pre_assert(kind == ChannelOpenContext::X11))]
     X11 {
         originator_address: arch::StringAscii,
         originator_port: u32,
@@ -86,7 +137,7 @@ pub enum ChannelOpenKind {
 
     /// A channel of type `forwarded-tcpip`,
     /// as defined in [RFC4254 section 7.2](https://datatracker.ietf.org/doc/html/rfc4254#section-7.2).
-    #[br(pre_assert(kind == ChannelOpenKind::FORWARDED_TCPIP))]
+    #[br(pre_assert(kind == ChannelOpenContext::FORWARDED_TCPIP))]
     ForwardedTcpip {
         address: arch::StringAscii,
         port: u32,
@@ -96,7 +147,7 @@ pub enum ChannelOpenKind {
 
     /// A channel of type `direct-tcpip`,
     /// as defined in [RFC4254 section 7.2](https://datatracker.ietf.org/doc/html/rfc4254#section-7.2).
-    #[br(pre_assert(kind == ChannelOpenKind::DIRECT_TCPIP))]
+    #[br(pre_assert(kind == ChannelOpenContext::DIRECT_TCPIP))]
     DirectTcpip {
         address: arch::StringAscii,
         port: u32,
@@ -105,13 +156,13 @@ pub enum ChannelOpenKind {
     },
 }
 
-impl ChannelOpenKind {
+impl ChannelOpenContext {
     const SESSION: &str = "session";
     const X11: &str = "x11";
     const FORWARDED_TCPIP: &str = "forwarded-tcpip";
     const DIRECT_TCPIP: &str = "direct-tcpip";
 
-    /// Get the [`ChannelKind`]'s SSH identifier.
+    /// Get the [`ChannelOpenContext`]'s SSH identifier.
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Session { .. } => Self::SESSION,
@@ -283,26 +334,26 @@ pub struct ChannelRequest {
     /// Recipient channel.
     pub recipient_channel: u32,
 
-    #[bw(calc = arch::StringAscii::new(kind.as_str()))]
-    request_kind: arch::StringAscii,
+    #[bw(calc = arch::StringAscii::new(context.as_str()))]
+    kind: arch::StringAscii,
 
     /// Whether the sender wants a reply.
     pub want_reply: arch::Bool,
 
-    /// The kind of the channel request.
-    #[br(args(&request_kind))]
-    pub kind: ChannelRequestKind,
+    /// The context of the channel request.
+    #[br(args(&kind))]
+    pub context: ChannelRequestContext,
 }
 
-/// The `kind` in the `SSH_MSG_CHANNEL_REQUEST` message.
+/// The `context` in the `SSH_MSG_CHANNEL_REQUEST` message.
 #[binrw]
 #[derive(Debug)]
 #[brw(big)]
 #[br(import(kind: &str))]
-pub enum ChannelRequestKind {
+pub enum ChannelRequestContext {
     /// A request of type `pty-req`,
     /// as defined in [RFC4254 section 6.2](https://datatracker.ietf.org/doc/html/rfc4254#section-6.2).
-    #[br(pre_assert(kind == ChannelRequestKind::PTY))]
+    #[br(pre_assert(kind == ChannelRequestContext::PTY))]
     Pty {
         term: arch::String,
         width_chars: u32,
@@ -314,7 +365,7 @@ pub enum ChannelRequestKind {
 
     /// A request of type `x11-req`,
     /// as defined in [RFC4254 section 6.3](https://datatracker.ietf.org/doc/html/rfc4254#section-6.3).
-    #[br(pre_assert(kind == ChannelRequestKind::X11))]
+    #[br(pre_assert(kind == ChannelRequestContext::X11))]
     X11 {
         single_connection: arch::Bool,
         x11_authentication_protocol: arch::String,
@@ -324,7 +375,7 @@ pub enum ChannelRequestKind {
 
     /// A request of type `env`,
     /// as defined in [RFC4254 section 6.4](https://datatracker.ietf.org/doc/html/rfc4254#section-6.4).
-    #[br(pre_assert(kind == ChannelRequestKind::ENV))]
+    #[br(pre_assert(kind == ChannelRequestContext::ENV))]
     Env {
         name: arch::String,
         value: arch::String,
@@ -332,22 +383,22 @@ pub enum ChannelRequestKind {
 
     /// A request of type `shell`,
     /// as defined in [RFC4254 section 6.5](https://datatracker.ietf.org/doc/html/rfc4254#section-6.5).
-    #[br(pre_assert(kind == ChannelRequestKind::SHELL))]
+    #[br(pre_assert(kind == ChannelRequestContext::SHELL))]
     Shell,
 
     /// A request of type `exec`,
     /// as defined in [RFC4254 section 6.5](https://datatracker.ietf.org/doc/html/rfc4254#section-6.5).
-    #[br(pre_assert(kind == ChannelRequestKind::EXEC))]
+    #[br(pre_assert(kind == ChannelRequestContext::EXEC))]
     Exec { command: arch::String },
 
     /// A request of type `subsystem`,
     /// as defined in [RFC4254 section 6.5](https://datatracker.ietf.org/doc/html/rfc4254#section-6.5).
-    #[br(pre_assert(kind == ChannelRequestKind::SUBSYSTEM))]
+    #[br(pre_assert(kind == ChannelRequestContext::SUBSYSTEM))]
     Subsystem { name: arch::String },
 
     /// A request of type `window-change`,
     /// as defined in [RFC4254 section 6.7](https://datatracker.ietf.org/doc/html/rfc4254#section-6.7).
-    #[br(pre_assert(kind == ChannelRequestKind::WINDOW_CHANGE))]
+    #[br(pre_assert(kind == ChannelRequestContext::WINDOW_CHANGE))]
     WindowChange {
         width_chars: u32,
         height_chars: u32,
@@ -357,22 +408,22 @@ pub enum ChannelRequestKind {
 
     /// A request of type `xon-xoff`,
     /// as defined in [RFC4254 section 6.8](hhttps://datatracker.ietf.org/doc/html/rfc4254#section-6.8).
-    #[br(pre_assert(kind == ChannelRequestKind::XON_XOFF))]
+    #[br(pre_assert(kind == ChannelRequestContext::XON_XOFF))]
     XonXoff { client_can_do: arch::Bool },
 
     /// A request of type `signal`,
     /// as defined in [RFC4254 section 6.9](hhttps://datatracker.ietf.org/doc/html/rfc4254#section-6.9).
-    #[br(pre_assert(kind == ChannelRequestKind::SIGNAL))]
+    #[br(pre_assert(kind == ChannelRequestContext::SIGNAL))]
     Signal { name: arch::String },
 
     /// A request of type `exit-status`,
     /// as defined in [RFC4254 section 6.10](hhttps://datatracker.ietf.org/doc/html/rfc4254#section-6.10).
-    #[br(pre_assert(kind == ChannelRequestKind::EXIT_STATUS))]
+    #[br(pre_assert(kind == ChannelRequestContext::EXIT_STATUS))]
     ExitStatus { code: u32 },
 
     /// A request of type `exit-signal`,
     /// as defined in [RFC4254 section 6.10](hhttps://datatracker.ietf.org/doc/html/rfc4254#section-6.10).
-    #[br(pre_assert(kind == ChannelRequestKind::EXIT_SIGNAL))]
+    #[br(pre_assert(kind == ChannelRequestContext::EXIT_SIGNAL))]
     ExitSignal {
         name: arch::String,
         core_dumped: arch::Bool,
@@ -381,7 +432,7 @@ pub enum ChannelRequestKind {
     },
 }
 
-impl ChannelRequestKind {
+impl ChannelRequestContext {
     const PTY: &str = "pty-req";
     const X11: &str = "x11-req";
     const ENV: &str = "env";
@@ -394,7 +445,7 @@ impl ChannelRequestKind {
     const EXIT_STATUS: &str = "exit-status";
     const EXIT_SIGNAL: &str = "exit-signal";
 
-    /// Get the [`ChannelRequestKind`]'s SSH identifier.
+    /// Get the [`ChannelRequestContext`]'s SSH identifier.
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Pty { .. } => Self::PTY,
