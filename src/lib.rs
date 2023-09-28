@@ -8,10 +8,8 @@ pub use packet::{Cipher, Packet};
 mod error;
 pub use error::Error;
 
-pub mod arch;
-pub mod connect;
-pub mod trans;
-pub mod userauth;
+mod message;
+pub use message::{arch, connect, trans, userauth};
 
 /// The SSH identification string as defined in the SSH protocol.
 ///
