@@ -31,6 +31,8 @@ pub struct AuthRequest {
 #[derive(Debug)]
 #[br(import(method: &str))]
 pub enum AuthMethod {
+    /// Authenticate using the `none` method,
+    /// as defined in [RFC4252 section 5.2](https://datatracker.ietf.org/doc/html/rfc4252#section-5.2).
     #[br(pre_assert(method == AuthMethod::NONE))]
     None,
 
@@ -41,9 +43,13 @@ pub enum AuthMethod {
         #[bw(calc = arch::Bool(signature.is_some()))]
         signed: arch::Bool,
 
+        /// Public key algorithm's name.
         algorithm: arch::String,
+        /// Public key blob.
         blob: arch::String,
 
+        /// The optional signature of the authentication packet,
+        /// signed with the according private key.
         #[br(if(*signed))]
         signature: Option<arch::String>,
     },
@@ -55,8 +61,11 @@ pub enum AuthMethod {
         #[bw(calc = arch::Bool(new.is_some()))]
         change: arch::Bool,
 
+        /// Plaintext password.
         password: arch::StringUtf8,
 
+        /// In the case of a the receival of a [`AuthPasswdChangereq`],
+        /// the new password to be set in place of the old one.
         #[br(if(*change))]
         new: Option<arch::StringUtf8>,
     },
@@ -65,10 +74,19 @@ pub enum AuthMethod {
     /// as defined in [RFC4252 section 9](https://datatracker.ietf.org/doc/html/rfc4252#section-9).
     #[br(pre_assert(method == AuthMethod::HOSTBASED))]
     Hostbased {
+        /// Public key algorithm for the host key.
         algorithm: arch::String,
+
+        /// Public host key and certificates for client host.
         host_key: arch::String,
+
+        /// Client host name expressed as the FQDN.
         client_fqdn: arch::StringAscii,
+
+        /// User name on the client host.
         username: arch::StringUtf8,
+
+        /// The signature of the authentication packet.
         signature: arch::String,
     },
 
@@ -76,7 +94,10 @@ pub enum AuthMethod {
     /// as defined in [RFC4256 section 3.1](https://datatracker.ietf.org/doc/html/rfc4256#section-3.1).
     #[br(pre_assert(method == AuthMethod::KEYBOARD_INTERACTIVE))]
     KeyboardInteractive {
+        /// Language tag.
         language: arch::StringAscii,
+
+        /// A hint for the prefered interactive submethod.
         submethods: arch::StringUtf8,
     },
 }
