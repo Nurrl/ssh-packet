@@ -7,7 +7,7 @@ readme = "README.md"
 license = "GPL-3.0"
 keywords = ["ssh", "binary"]
 authors = ["Maya the bee <15341887+Nurrl@users.noreply.github.com>"]
-version = "0.0.4"
+version = "0.0.5"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
