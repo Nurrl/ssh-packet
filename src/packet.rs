@@ -55,6 +55,22 @@ impl Packet {
 
         cipher.encrypt(payload.into_inner()).map_err(Error::Cipher)
     }
+
+    /// Read a [`Packet`] from the provided `reader`.
+    pub fn from_reader<R, E>(reader: &mut R) -> Result<Self, Error<E>>
+    where
+        R: std::io::Read + std::io::Seek,
+    {
+        Ok(Self::read(reader)?)
+    }
+
+    /// Write the [`Packet`] to the provided `writer`.
+    pub fn to_writer<W, E>(&self, writer: &mut W) -> Result<(), Error<E>>
+    where
+        W: std::io::Write + std::io::Seek,
+    {
+        Ok(self.write(writer)?)
+    }
 }
 
 /// The cipher implemented to `decrypt` data from a [`Packet`]
