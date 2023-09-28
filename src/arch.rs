@@ -73,7 +73,7 @@ pub struct StringAscii {
 
     #[br(try_map = |bytes: Vec<u8>| StdString::from_utf8(bytes).map(Cow::Owned), count = size)]
     #[bw(map = |payload| payload.as_bytes())]
-    #[brw(assert(payload.chars().all(|ch| ch.is_ascii())))]
+    #[brw(assert(payload.is_ascii()))]
     payload: Cow<'static, str>,
 }
 
