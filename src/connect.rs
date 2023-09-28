@@ -305,8 +305,8 @@ pub struct ChannelExtendedData {
     /// Recipient channel.
     pub recipient_channel: u32,
 
-    /// Data type's code.
-    pub data_type_code: ChannelExtendedDataType,
+    /// Type of the transmitted data.
+    pub data_type: ChannelExtendedDataType,
 
     /// Data bytes to transport.
     pub data: arch::String,
