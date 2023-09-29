@@ -1,5 +1,5 @@
 use binrw::{
-    binrw, helpers,
+    binrw,
     meta::{ReadEndian, WriteEndian},
     BinRead, BinWrite,
 };
@@ -12,6 +12,7 @@ use crate::Error;
 #[binrw]
 #[derive(Debug)]
 #[brw(big)]
+#[br(import(mac_len: usize))]
 pub struct Packet {
     #[bw(assert(payload.len() > u32::MAX as usize, "payload size is too large"), calc = payload.len() as u32)]
     len: u32,
@@ -28,7 +29,7 @@ pub struct Packet {
     pub padding: Vec<u8>,
 
     /// SSH packet's Message Authentication Code as binary.
-    #[br(parse_with = helpers::until_eof)]
+    #[br(count = mac_len)]
     pub mac: Vec<u8>,
 }
 
@@ -57,11 +58,12 @@ impl Packet {
     }
 
     /// Read a [`Packet`] from the provided `reader`.
-    pub fn from_reader<R, E>(reader: &mut R) -> Result<Self, Error<E>>
+    pub fn from_reader<R, E, C>(reader: &mut R, cipher: &C) -> Result<Self, Error<E>>
     where
         R: std::io::Read + std::io::Seek,
+        C: Cipher,
     {
-        Ok(Self::read(reader)?)
+        Ok(Self::read_args(reader, (cipher.size(),))?)
     }
 
     /// Write the [`Packet`] to the provided `writer`.
@@ -79,9 +81,40 @@ pub trait Cipher {
     /// The associated error which can be returned when encrypting or decrypting.
     type Err;
 
+    /// The size of the Message Authentication Code for this [`Cipher`], in bytes.
+    fn size(&self) -> usize;
+
     /// Transform the [`Packet`] using the [`Cipher`] into it's decrypted `payload`.
     fn decrypt(&mut self, packet: Packet) -> Result<Vec<u8>, Self::Err>;
 
     /// Transform the `payload` into it's encrypted [`Packet`] using the [`Cipher`].
     fn encrypt(&mut self, payload: Vec<u8>) -> Result<Packet, Self::Err>;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn assert_cipher_is_object_safe() {
+        struct Dummy;
+
+        impl Cipher for Dummy {
+            type Err = ();
+
+            fn size(&self) -> usize {
+                16
+            }
+
+            fn decrypt(&mut self, _packet: Packet) -> Result<Vec<u8>, Self::Err> {
+                todo!()
+            }
+
+            fn encrypt(&mut self, _payload: Vec<u8>) -> Result<Packet, Self::Err> {
+                todo!()
+            }
+        }
+
+        let _: &dyn Cipher<Err = ()> = &Dummy;
+    }
 }
