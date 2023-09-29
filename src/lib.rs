@@ -9,7 +9,7 @@ mod error;
 pub use error::Error;
 
 mod message;
-pub use message::{arch, connect, trans, userauth};
+pub use message::{arch, connect, trans, userauth, Message};
 
 /// The SSH identification string as defined in the SSH protocol.
 ///
