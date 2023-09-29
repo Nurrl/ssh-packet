@@ -12,6 +12,14 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[package.metadata.docs.rs]
+
+# Whether to pass `--all-features` to Cargo (default: false)
+all-features = true
+
+# Enable unstable features in the documentation
+rustdoc-args = ["--cfg", "docsrs"]
+
 [dependencies]
 binrw = "0.12.0"
 thiserror = "1.0.49"
