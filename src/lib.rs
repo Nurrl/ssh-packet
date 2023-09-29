@@ -11,10 +11,12 @@ pub use error::Error;
 mod message;
 pub use message::{arch, connect, trans, userauth, Message};
 
+const VERSION: &str = "2.0";
+
 /// The SSH identification string as defined in the SSH protocol.
 ///
 /// The format must match the following pattern:
-/// `SSH-{protoversion}-{softwareversion}[ {comments}]\r\n`.
+/// `SSH-<protoversion>-<softwareversion>[ <comments>]\r\n`.
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-4.2>.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -27,6 +29,17 @@ pub struct Identifier {
 
     /// Optional comments with additionnal informations about the software.
     pub comments: Option<String>,
+}
+
+impl Identifier {
+    /// Convenience method to create an `SSH-2.0` identifier string.
+    pub fn v2(softwareversion: impl Into<String>, comments: Option<impl Into<String>>) -> Self {
+        Self {
+            protoversion: VERSION.into(),
+            softwareversion: softwareversion.into(),
+            comments: comments.map(Into::into),
+        }
+    }
 }
 
 impl std::fmt::Display for Identifier {
