@@ -55,7 +55,7 @@ impl std::fmt::Display for Identifier {
 }
 
 impl std::str::FromStr for Identifier {
-    type Err = &'static str;
+    type Err = Error<()>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (id, comments) = s
@@ -68,7 +68,7 @@ impl std::str::FromStr for Identifier {
                 softwareversion: softwareversion.to_string(),
                 comments: comments.map(str::to_string),
             }),
-            _ => Err("The SSH identifier was either misformatted or misprefixed"),
+            _ => Err(Error::BadIdentifer),
         }
     }
 }
