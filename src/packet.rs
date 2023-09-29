@@ -66,12 +66,56 @@ impl Packet {
         Ok(Self::read_args(reader, (cipher.size(),))?)
     }
 
+    /// Read a [`Packet`] from the provided asynchronous `reader`.
+    #[cfg(feature = "futures")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
+    pub async fn from_async_reader<R, E, C>(reader: &mut R, cipher: &C) -> Result<Self, Error<E>>
+    where
+        R: futures::io::AsyncRead + Unpin,
+        C: Cipher,
+    {
+        use futures::io::AsyncReadExt;
+
+        let mut buf = [0u8; 4];
+        reader.read_exact(&mut buf).await?;
+
+        let len = u32::from_be_bytes(buf);
+        let size = buf.len() + len as usize + cipher.size();
+
+        let mut buf = buf.to_vec();
+        buf.resize(size, 0);
+
+        reader.read_exact(&mut buf[..]).await?;
+
+        Ok(Self::read_args(
+            &mut std::io::Cursor::new(buf),
+            (cipher.size(),),
+        )?)
+    }
+
     /// Write the [`Packet`] to the provided `writer`.
     pub fn to_writer<W, E>(&self, writer: &mut W) -> Result<(), Error<E>>
     where
         W: std::io::Write + std::io::Seek,
     {
         Ok(self.write(writer)?)
+    }
+
+    /// Write the [`Packet`] to the provided asynchronous `writer`.
+    #[cfg(feature = "futures")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
+    pub async fn to_async_writer<W, E>(&self, writer: &mut W) -> Result<(), Error<E>>
+    where
+        W: futures::io::AsyncWrite + Unpin,
+    {
+        use futures::io::AsyncWriteExt;
+
+        let size = 4 + self.payload.len() + self.padding.len() + self.mac.len();
+
+        let mut buf = std::io::Cursor::new(vec![0u8; size]);
+        self.write(&mut buf)?;
+
+        Ok(writer.write_all(&buf.into_inner()).await?)
     }
 }
 

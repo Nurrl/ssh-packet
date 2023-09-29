@@ -7,6 +7,10 @@ pub enum Error<E> {
     #[error(transparent)]
     BinRw(#[from] binrw::Error),
 
+    /// An error occured while performing I/O operations.
+    #[error(transparent)]
+    IO(#[from] std::io::Error),
+
     /// An error occured manipulating the Cipher trait.
     #[error(transparent)]
     Cipher(E),
