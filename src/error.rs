@@ -11,6 +11,10 @@ pub enum Error<E> {
     #[error(transparent)]
     IO(#[from] std::io::Error),
 
+    /// An error occured because the data wasn't UTF-8.
+    #[error(transparent)]
+    Utf8Error(#[from] std::str::Utf8Error),
+
     /// An error occured manipulating the Cipher trait.
     #[error(transparent)]
     Cipher(E),
