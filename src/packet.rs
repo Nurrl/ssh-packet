@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 use binrw::{
     binrw,
     meta::{ReadEndian, WriteEndian},
@@ -58,7 +60,7 @@ impl Packet {
     }
 
     /// Read a [`Packet`] from the provided `reader`.
-    pub fn from_reader<R, E, C>(reader: &mut R, cipher: &C) -> Result<Self, Error<E>>
+    pub fn from_reader<R, C>(reader: &mut R, cipher: &C) -> Result<Self, Error<Infallible>>
     where
         R: std::io::Read + std::io::Seek,
         C: Cipher,
@@ -69,7 +71,10 @@ impl Packet {
     /// Read a [`Packet`] from the provided asynchronous `reader`.
     #[cfg(feature = "futures")]
     #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
-    pub async fn from_async_reader<R, E, C>(reader: &mut R, cipher: &C) -> Result<Self, Error<E>>
+    pub async fn from_async_reader<R, C>(
+        reader: &mut R,
+        cipher: &C,
+    ) -> Result<Self, Error<Infallible>>
     where
         R: futures::io::AsyncRead + Unpin,
         C: Cipher,
@@ -94,7 +99,7 @@ impl Packet {
     }
 
     /// Write the [`Packet`] to the provided `writer`.
-    pub fn to_writer<W, E>(&self, writer: &mut W) -> Result<(), Error<E>>
+    pub fn to_writer<W>(&self, writer: &mut W) -> Result<(), Error<Infallible>>
     where
         W: std::io::Write + std::io::Seek,
     {
@@ -104,7 +109,7 @@ impl Packet {
     /// Write the [`Packet`] to the provided asynchronous `writer`.
     #[cfg(feature = "futures")]
     #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
-    pub async fn to_async_writer<W, E>(&self, writer: &mut W) -> Result<(), Error<E>>
+    pub async fn to_async_writer<W>(&self, writer: &mut W) -> Result<(), Error<Infallible>>
     where
         W: futures::io::AsyncWrite + Unpin,
     {

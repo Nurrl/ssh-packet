@@ -9,11 +9,7 @@ pub enum Error<E> {
 
     /// An error occured while performing I/O operations.
     #[error(transparent)]
-    IO(#[from] std::io::Error),
-
-    /// An error occured because the data wasn't UTF-8.
-    #[error(transparent)]
-    Utf8Error(#[from] std::str::Utf8Error),
+    Io(#[from] std::io::Error),
 
     /// An error occured manipulating the Cipher trait.
     #[error(transparent)]
@@ -22,4 +18,19 @@ pub enum Error<E> {
     /// The parsed identifier was not conformant.
     #[error("The SSH identifier was either misformatted or misprefixed")]
     BadIdentifer,
+
+    /// An EOF occured while parsing.
+    #[error("Unexpected EOF while waiting for SSH identifer")]
+    UnexpectedEof,
+}
+
+impl<E: PartialEq> PartialEq for Error<E> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::BinRw { .. }, Self::BinRw { .. }) => true,
+            (Self::Io(l0), Self::Io(r0)) => l0.kind() == r0.kind(),
+            (Self::Cipher(l0), Self::Cipher(r0)) => l0 == r0,
+            _ => core::mem::discriminant(self) == core::mem::discriminant(other),
+        }
+    }
 }
