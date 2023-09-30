@@ -10,7 +10,7 @@ use binrw::binrw;
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[binrw]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 #[brw(big)]
 pub struct Bytes {
     #[bw(calc = payload.len() as u32)]
@@ -40,7 +40,7 @@ impl std::ops::Deref for Bytes {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[binrw]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 #[brw(big)]
 pub struct MpInt(Bytes);
 
@@ -65,7 +65,7 @@ impl std::ops::Deref for MpInt {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[binrw]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 #[brw(big, assert(std::str::from_utf8(&self_0.payload).is_ok()))]
 pub struct StringUtf8(Bytes);
 
@@ -91,7 +91,7 @@ impl std::ops::Deref for StringUtf8 {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[binrw]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 #[brw(big, assert(self_0.is_ascii()))]
 pub struct StringAscii(StringUtf8);
 
@@ -116,7 +116,7 @@ impl std::ops::Deref for StringAscii {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[binrw]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 #[brw(big)]
 pub struct NameList(StringAscii);
 
@@ -146,7 +146,7 @@ impl<'n> IntoIterator for &'n NameList {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[binrw]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 #[brw(big)]
 pub struct Bool(
     #[br(map = |n: u8| n > 0)]

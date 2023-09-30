@@ -12,7 +12,7 @@ use crate::Error;
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-6>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big)]
 #[br(import(mac_len: usize))]
 pub struct Packet {

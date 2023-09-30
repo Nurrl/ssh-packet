@@ -9,7 +9,7 @@ use crate::arch;
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4254#section-4>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 80_u8)]
 pub struct GlobalRequest {
     #[bw(calc = arch::StringAscii::new(context.as_str()))]
@@ -25,7 +25,7 @@ pub struct GlobalRequest {
 
 /// The `context` in the `SSH_MSG_GLOBAL_REQUEST` message.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big)]
 #[br(import(kind: &str))]
 pub enum GlobalRequestContext {
@@ -69,7 +69,7 @@ impl GlobalRequestContext {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4254#section-4>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 81_u8)]
 pub struct RequestSuccess {
     /// The context of the global response.
@@ -78,7 +78,7 @@ pub struct RequestSuccess {
 
 /// The `context` in the `SSH_MSG_REQUEST_SUCCESS` message.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big)]
 pub enum RequestSuccessContext {
     /// An empty response context for standard global requests.
@@ -97,7 +97,7 @@ pub enum RequestSuccessContext {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4254#section-4>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 82_u8)]
 pub struct RequestFailure;
 
@@ -105,7 +105,7 @@ pub struct RequestFailure;
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4254#section-5.1>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 90_u8)]
 pub struct ChannelOpen {
     #[bw(calc = arch::StringAscii::new(context.as_str()))]
@@ -127,7 +127,7 @@ pub struct ChannelOpen {
 
 /// The `context` in the `SSH_MSG_CHANNEL_OPEN` message.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big)]
 #[br(import(kind: &str))]
 pub enum ChannelOpenContext {
@@ -203,7 +203,7 @@ impl ChannelOpenContext {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4254#section-5.1>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 91_u8)]
 pub struct ChannelOpenConfirmation {
     /// Recipient channel.
@@ -223,7 +223,7 @@ pub struct ChannelOpenConfirmation {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4254#section-5.1>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 92_u8)]
 pub struct ChannelOpenFailure {
     /// Recipient channel.
@@ -241,7 +241,7 @@ pub struct ChannelOpenFailure {
 
 /// The `reason` for failure in the `SSH_MSG_CHANNEL_OPEN_FAILURE` message.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big)]
 pub enum ChannelOpenFailureReason {
     /// `SSH_OPEN_ADMINISTRATIVELY_PROHIBITED`.
@@ -271,7 +271,7 @@ pub enum ChannelOpenFailureReason {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4254#section-5.2>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 93_u8)]
 pub struct ChannelWindowAdjust {
     /// Recipient channel.
@@ -285,7 +285,7 @@ pub struct ChannelWindowAdjust {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4254#section-5.2>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 94_u8)]
 pub struct ChannelData {
     /// Recipient channel.
@@ -299,7 +299,7 @@ pub struct ChannelData {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4254#section-5.2>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 95_u8)]
 pub struct ChannelExtendedData {
     /// Recipient channel.
@@ -314,7 +314,7 @@ pub struct ChannelExtendedData {
 
 /// The `type` of extended data in the `SSH_MSG_CHANNEL_EXTENDED_DATA` message.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big)]
 pub enum ChannelExtendedDataType {
     /// `SSH_EXTENDED_DATA_STDERR`.
@@ -332,7 +332,7 @@ pub enum ChannelExtendedDataType {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4254#section-5.3>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 96_u8)]
 pub struct ChannelEof {
     /// Recipient channel.
@@ -343,7 +343,7 @@ pub struct ChannelEof {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4254#section-5.3>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 97_u8)]
 pub struct ChannelClose {
     /// Recipient channel.
@@ -354,7 +354,7 @@ pub struct ChannelClose {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4254#section-5.4>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 98_u8)]
 pub struct ChannelRequest {
     /// Recipient channel.
@@ -373,7 +373,7 @@ pub struct ChannelRequest {
 
 /// The `context` in the `SSH_MSG_CHANNEL_REQUEST` message.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big)]
 #[br(import(kind: &str))]
 pub enum ChannelRequestContext {
@@ -543,7 +543,7 @@ impl ChannelRequestContext {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4254#section-5.4>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 99_u8)]
 pub struct ChannelSuccess {
     /// Recipient channel.
@@ -554,7 +554,7 @@ pub struct ChannelSuccess {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4254#section-5.4>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 100_u8)]
 pub struct ChannelFailure {
     /// Recipient channel.

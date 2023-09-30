@@ -10,7 +10,7 @@ use crate::arch;
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-11.1>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 1_u8)]
 pub struct Disconnect {
     /// Reason for disconnection.
@@ -25,7 +25,7 @@ pub struct Disconnect {
 
 /// The `reason` for disconnect in the `SSH_MSG_DISCONNECT` message.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big)]
 pub enum DisconnectReason {
     /// `SSH_DISCONNECT_HOST_NOT_ALLOWED_TO_CONNECT`.
@@ -99,7 +99,7 @@ pub enum DisconnectReason {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-11.2>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 2_u8)]
 pub struct Ignore {
     /// A random blob of data to ignore.
@@ -110,7 +110,7 @@ pub struct Ignore {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-11.3>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 4_u8)]
 pub struct Debug {
     /// Whether the debug data should be forcefully displayed.
@@ -127,7 +127,7 @@ pub struct Debug {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-11.4>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 3_u8)]
 pub struct Unimplemented {
     /// Packet sequence number of rejected message.
@@ -138,7 +138,7 @@ pub struct Unimplemented {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-10>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 5_u8)]
 pub struct ServiceRequest {
     /// The service name to request.
@@ -149,7 +149,7 @@ pub struct ServiceRequest {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-10>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 6_u8)]
 pub struct ServiceAccept {
     /// Service name accepted to be requested.
@@ -160,7 +160,7 @@ pub struct ServiceAccept {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-7.1>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 20_u8)]
 pub struct KexInit {
     /// The kex-init cookie.
@@ -207,7 +207,7 @@ pub struct KexInit {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-7.3>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 21_u8)]
 pub struct NewKeys;
 
@@ -215,7 +215,7 @@ pub struct NewKeys;
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-8>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 30_u8)]
 pub struct KexdhInit {
     /// Exchange value sent by the client.
@@ -226,7 +226,7 @@ pub struct KexdhInit {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-8>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 31_u8)]
 pub struct KexdhReply {
     /// Server's public host key.
@@ -243,7 +243,7 @@ pub struct KexdhReply {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc5656#section-4>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 30_u8)]
 pub struct KexEcdhInit {
     /// Client's ephemeral public key octet string
@@ -254,7 +254,7 @@ pub struct KexEcdhInit {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc5656#section-4>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 31_u8)]
 pub struct KexEcdhReply {
     /// Server's public host key.

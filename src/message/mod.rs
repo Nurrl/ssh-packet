@@ -21,7 +21,7 @@ macro_rules! message {
         /// respectively with a [`AuthMethod::Publickey`], [`AuthMethod::Password`] or [`AuthMethod::KeyboardInteractive`]
         /// because they share the same `magic` byte in the protocol.
         #[binrw]
-        #[derive(Debug)]
+        #[derive(Debug, Clone)]
         #[brw(big)]
         pub enum Message {
             $(

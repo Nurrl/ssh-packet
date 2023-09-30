@@ -9,7 +9,7 @@ use crate::arch;
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4252>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 50_u8)]
 pub struct AuthRequest {
     /// Username for the auth request.
@@ -28,7 +28,7 @@ pub struct AuthRequest {
 
 /// The Authentication method in the `SSH_MSG_USERAUTH_REQUEST` message.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[br(import(method: &str))]
 pub enum AuthMethod {
     /// Authenticate using the `none` method,
@@ -125,7 +125,7 @@ impl AuthMethod {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4252#section-7>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 60_u8)]
 pub struct AuthPkOk {
     /// Public key algorithm name from the request.
@@ -139,7 +139,7 @@ pub struct AuthPkOk {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4252#section-8>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 60_u8)]
 pub struct AuthPasswdChangereq {
     /// Password change prompt.
@@ -153,7 +153,7 @@ pub struct AuthPasswdChangereq {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4256#section-3.2>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 60_u8)]
 pub struct AuthInfoRequest {
     /// Name of the challenge.
@@ -175,7 +175,7 @@ pub struct AuthInfoRequest {
 
 /// A prompt in the `SSH_MSG_USERAUTH_INFO_REQUEST` message.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big)]
 pub struct AuthInfoRequestPrompt {
     /// Challenge prompt text.
@@ -189,7 +189,7 @@ pub struct AuthInfoRequestPrompt {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4256#section-3.4>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 61_u8)]
 pub struct AuthInfoResponse {
     #[bw(calc = responses.len() as u32)]
@@ -204,7 +204,7 @@ pub struct AuthInfoResponse {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4252#section-5.1>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 51_u8)]
 pub struct AuthFailure {
     /// Authentications that can continue.
@@ -218,7 +218,7 @@ pub struct AuthFailure {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4252#section-5.1>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 52_u8)]
 pub struct AuthSuccess;
 
@@ -226,7 +226,7 @@ pub struct AuthSuccess;
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4252#section-5.4>.
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[brw(big, magic = 53_u8)]
 pub struct AuthBanner {
     /// The auth banner message.
