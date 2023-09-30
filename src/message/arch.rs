@@ -21,11 +21,38 @@ pub struct Bytes {
     payload: Cow<'static, [u8]>,
 }
 
+impl Bytes {
+    /// Create new [`Bytes`] from a [`Cow<[u8]>`].
+    pub fn new(s: impl Into<Cow<'static, [u8]>>) -> Self {
+        Self { payload: s.into() }
+    }
+}
+
 impl std::ops::Deref for Bytes {
     type Target = [u8];
 
     fn deref(&self) -> &Self::Target {
         self.payload.as_ref()
+    }
+}
+
+/// A `mpint` as defined in the SSH protocol.
+///
+/// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
+pub struct MpInt(Bytes);
+
+impl MpInt {
+    /// Create new [`MpInt`] from a [`Cow<[u8]>`].
+    pub fn new(s: impl Into<Cow<'static, [u8]>>) -> Self {
+        Self(Bytes::new(s))
+    }
+}
+
+impl std::ops::Deref for MpInt {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -40,11 +67,9 @@ impl std::ops::Deref for Bytes {
 pub struct StringUtf8(Bytes);
 
 impl StringUtf8 {
-    /// Create a new [`StringUtf8`] from a [`String`].
+    /// Create new [`StringUtf8`] from a [`String`].
     pub fn new(s: impl Into<String>) -> Self {
-        Self(Bytes {
-            payload: s.into().into_bytes().into(),
-        })
+        Self(Bytes::new(s.into().into_bytes()))
     }
 }
 
@@ -68,7 +93,7 @@ impl std::ops::Deref for StringUtf8 {
 pub struct StringAscii(StringUtf8);
 
 impl StringAscii {
-    /// Create a new [`StringAscii`] from a [`String`].
+    /// Create new [`StringAscii`] from a [`String`].
     pub fn new(s: impl Into<String>) -> Self {
         Self(StringUtf8::new(s))
     }
@@ -91,6 +116,22 @@ impl std::ops::Deref for StringAscii {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[brw(big)]
 pub struct NameList(StringAscii);
+
+impl NameList {
+    /// Create new [`NameList`] from a list of names.
+    pub fn new(names: &[&str]) -> Self {
+        Self(StringAscii::new(names.join(",")))
+    }
+}
+
+impl<'n> IntoIterator for &'n NameList {
+    type Item = &'n str;
+    type IntoIter = std::str::Split<'n, char>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.split(',')
+    }
+}
 
 /// A `boolean` as defined in the SSH protocol.
 ///
