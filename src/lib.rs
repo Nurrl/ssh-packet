@@ -4,7 +4,7 @@
 pub use ::binrw;
 
 mod packet;
-pub use packet::{Cipher, Packet};
+pub use packet::{OpeningCipher, Packet, SealingCipher};
 
 mod error;
 pub use error::Error;

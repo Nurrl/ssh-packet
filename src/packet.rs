@@ -40,9 +40,9 @@ impl Packet {
     pub fn decrypt<T, C>(self, cipher: &mut C) -> Result<T, Error<C::Err>>
     where
         for<'r> T: BinRead<Args<'r> = ()> + ReadEndian,
-        C: Cipher,
+        C: OpeningCipher,
     {
-        let payload = cipher.decrypt(self).map_err(Error::Cipher)?;
+        let payload = cipher.open(self).map_err(Error::Cipher)?;
 
         Ok(T::read(&mut std::io::Cursor::new(payload))?)
     }
@@ -51,19 +51,19 @@ impl Packet {
     pub fn encrypt<T, C>(message: T, cipher: &mut C) -> Result<Self, Error<C::Err>>
     where
         for<'w> T: BinWrite<Args<'w> = ()> + WriteEndian,
-        C: Cipher,
+        C: SealingCipher,
     {
         let mut payload = std::io::Cursor::new(Vec::new());
         message.write(&mut payload)?;
 
-        cipher.encrypt(payload.into_inner()).map_err(Error::Cipher)
+        cipher.seal(payload.into_inner()).map_err(Error::Cipher)
     }
 
     /// Read a [`Packet`] from the provided `reader`.
     pub fn from_reader<R, C>(reader: &mut R, cipher: &C) -> Result<Self, Error<Infallible>>
     where
         R: std::io::Read + std::io::Seek,
-        C: Cipher,
+        C: OpeningCipher,
     {
         Ok(Self::read_args(reader, (cipher.size(),))?)
     }
@@ -77,7 +77,7 @@ impl Packet {
     ) -> Result<Self, Error<Infallible>>
     where
         R: futures::io::AsyncRead + Unpin,
-        C: Cipher,
+        C: OpeningCipher,
     {
         use futures::io::AsyncReadExt;
 
@@ -124,20 +124,25 @@ impl Packet {
     }
 }
 
-/// The cipher implemented to `decrypt` data from a [`Packet`]
-/// or `encrypt` data to [`Packet`].
-pub trait Cipher {
-    /// The associated error which can be returned when encrypting or decrypting.
+/// A cipher able to `open` a [`Packet`] and retrieve it's payload.
+pub trait OpeningCipher {
+    /// The associated error type returned by the `open` method.
     type Err;
 
-    /// The size of the Message Authentication Code for this [`Cipher`], in bytes.
+    /// The size of the Message Authentication Code for this [`OpeningCipher`], in bytes.
     fn size(&self) -> usize;
 
-    /// Transform the [`Packet`] using the [`Cipher`] into it's decrypted `payload`.
-    fn decrypt(&mut self, packet: Packet) -> Result<Vec<u8>, Self::Err>;
+    /// Transform the [`Packet`] using the [`OpeningCipher`] into it's decrypted `payload`.
+    fn open(&mut self, packet: Packet) -> Result<Vec<u8>, Self::Err>;
+}
 
-    /// Transform the `payload` into it's encrypted [`Packet`] using the [`Cipher`].
-    fn encrypt(&mut self, payload: Vec<u8>) -> Result<Packet, Self::Err>;
+/// A cipher able to `seal` a payload to create a [`Packet`].
+pub trait SealingCipher {
+    /// The associated error type returned by the `seal` method.
+    type Err;
+
+    /// Transform the `payload` into it's encrypted [`Packet`] using the [`SealingCipher`].
+    fn seal(&mut self, payload: Vec<u8>) -> Result<Packet, Self::Err>;
 }
 
 #[cfg(test)]
@@ -145,25 +150,30 @@ mod tests {
     use super::*;
 
     #[test]
-    fn assert_cipher_is_object_safe() {
+    fn assert_traits_are_object_safe() {
         struct Dummy;
 
-        impl Cipher for Dummy {
+        impl OpeningCipher for Dummy {
             type Err = ();
 
             fn size(&self) -> usize {
                 16
             }
 
-            fn decrypt(&mut self, _packet: Packet) -> Result<Vec<u8>, Self::Err> {
-                todo!()
-            }
-
-            fn encrypt(&mut self, _payload: Vec<u8>) -> Result<Packet, Self::Err> {
+            fn open(&mut self, _packet: Packet) -> Result<Vec<u8>, Self::Err> {
                 todo!()
             }
         }
 
-        let _: &dyn Cipher<Err = ()> = &Dummy;
+        impl SealingCipher for Dummy {
+            type Err = ();
+
+            fn seal(&mut self, _payload: Vec<u8>) -> Result<Packet, Self::Err> {
+                todo!()
+            }
+        }
+
+        let _: &dyn OpeningCipher<Err = ()> = &Dummy;
+        let _: &dyn SealingCipher<Err = ()> = &Dummy;
     }
 }
