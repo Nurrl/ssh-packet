@@ -1,5 +1,6 @@
 //! Messages involved in the SSH's **transport** (`SSH-TRANS`) part of the protocol,
-//! as defined in the [RFC 4253](https://datatracker.ietf.org/doc/html/rfc4253).
+//! as defined in the [RFC 4253](https://datatracker.ietf.org/doc/html/rfc4253)
+//! and [RFC 5656](https://datatracker.ietf.org/doc/html/rfc5656).
 
 use binrw::binrw;
 
@@ -209,3 +210,59 @@ pub struct KexInit {
 #[derive(Debug)]
 #[brw(big, magic = 21_u8)]
 pub struct NewKeys;
+
+/// The `SSH_MSG_KEXDH_INIT` message.
+///
+/// see <https://datatracker.ietf.org/doc/html/rfc4253#section-8>.
+#[binrw]
+#[derive(Debug)]
+#[brw(big, magic = 30_u8)]
+pub struct KexdhInit {
+    /// Exchange value sent by the client.
+    pub e: arch::MpInt,
+}
+
+/// The `SSH_MSG_KEXDH_REPLY` message.
+///
+/// see <https://datatracker.ietf.org/doc/html/rfc4253#section-8>.
+#[binrw]
+#[derive(Debug)]
+#[brw(big, magic = 31_u8)]
+pub struct KexdhReply {
+    /// Server's public host key.
+    pub k_s: arch::Bytes,
+
+    /// Exchange value sent by the server.
+    pub f: arch::MpInt,
+
+    /// Signature of the exchange hash.
+    pub signature: arch::Bytes,
+}
+
+/// The `SSH_MSG_KEX_ECDH_INIT` message.
+///
+/// see <https://datatracker.ietf.org/doc/html/rfc5656#section-4>.
+#[binrw]
+#[derive(Debug)]
+#[brw(big, magic = 30_u8)]
+pub struct KexEcdhInit {
+    /// Client's ephemeral public key octet string
+    pub q_c: arch::Bytes,
+}
+
+/// The `SSH_MSG_KEX_ECDH_REPLY` message.
+///
+/// see <https://datatracker.ietf.org/doc/html/rfc5656#section-4>.
+#[binrw]
+#[derive(Debug)]
+#[brw(big, magic = 31_u8)]
+pub struct KexEcdhReply {
+    /// Server's public host key.
+    pub k_s: arch::Bytes,
+
+    /// Server's ephemeral public key octet string
+    pub q_s: arch::Bytes,
+
+    /// Signature of the exchange hash.
+    pub signature: arch::Bytes,
+}

@@ -39,6 +39,9 @@ impl std::ops::Deref for Bytes {
 /// A `mpint` as defined in the SSH protocol.
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
+#[binrw]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[brw(big)]
 pub struct MpInt(Bytes);
 
 impl MpInt {
