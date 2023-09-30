@@ -125,6 +125,12 @@ impl NameList {
     pub fn new(names: &[&str]) -> Self {
         Self(StringAscii::new(names.join(",")))
     }
+
+    /// Retrieve the first name from `self` that is also in `other`.
+    pub fn preferred(&self, other: &Self) -> Option<&str> {
+        self.into_iter()
+            .find(|&name| other.into_iter().any(|n| name == n))
+    }
 }
 
 impl<'n> IntoIterator for &'n NameList {
