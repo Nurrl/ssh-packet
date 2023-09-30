@@ -44,14 +44,14 @@ pub enum AuthMethod {
         signed: arch::Bool,
 
         /// Public key algorithm's name.
-        algorithm: arch::String,
+        algorithm: arch::Bytes,
         /// Public key blob.
-        blob: arch::String,
+        blob: arch::Bytes,
 
         /// The optional signature of the authentication packet,
         /// signed with the according private key.
         #[br(if(*signed))]
-        signature: Option<arch::String>,
+        signature: Option<arch::Bytes>,
     },
 
     /// Authenticate using the `password` method,
@@ -75,10 +75,10 @@ pub enum AuthMethod {
     #[br(pre_assert(method == AuthMethod::HOSTBASED))]
     Hostbased {
         /// Public key algorithm for the host key.
-        algorithm: arch::String,
+        algorithm: arch::Bytes,
 
         /// Public host key and certificates for client host.
-        host_key: arch::String,
+        host_key: arch::Bytes,
 
         /// Client host name expressed as the FQDN.
         client_fqdn: arch::StringAscii,
@@ -87,7 +87,7 @@ pub enum AuthMethod {
         username: arch::StringUtf8,
 
         /// The signature of the authentication packet.
-        signature: arch::String,
+        signature: arch::Bytes,
     },
 
     /// Authenticate using the `keyboard-interactive` method,
@@ -129,10 +129,10 @@ impl AuthMethod {
 #[brw(big, magic = 60_u8)]
 pub struct AuthPkOk {
     /// Public key algorithm name from the request.
-    pub algorithm: arch::String,
+    pub algorithm: arch::Bytes,
 
     /// Public key blob from the request.
-    pub blob: arch::String,
+    pub blob: arch::Bytes,
 }
 
 /// The `SSH_MSG_USERAUTH_PASSWD_CHANGEREQ` message.

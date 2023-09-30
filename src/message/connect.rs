@@ -34,7 +34,7 @@ pub enum GlobalRequestContext {
     #[br(pre_assert(kind == GlobalRequestContext::TCPIP_FORWARD))]
     TcpipForward {
         /// Address to bind on the remote.
-        bind_address: arch::String,
+        bind_address: arch::Bytes,
 
         /// Port to bind on the remote, randomly choosen if 0.
         bind_port: u32,
@@ -45,7 +45,7 @@ pub enum GlobalRequestContext {
     #[br(pre_assert(kind == GlobalRequestContext::CANCEL_TCPIP_FORWARD))]
     CancelTcpipForward {
         /// Address that was bound on the remote.
-        bind_address: arch::String,
+        bind_address: arch::Bytes,
 
         /// Port that was bound on the remote.
         bind_port: u32,
@@ -292,7 +292,7 @@ pub struct ChannelData {
     pub recipient_channel: u32,
 
     /// Data bytes to transport.
-    pub data: arch::String,
+    pub data: arch::Bytes,
 }
 
 /// The `SSH_MSG_CHANNEL_EXTENDED_DATA` message.
@@ -309,7 +309,7 @@ pub struct ChannelExtendedData {
     pub data_type: ChannelExtendedDataType,
 
     /// Data bytes to transport.
-    pub data: arch::String,
+    pub data: arch::Bytes,
 }
 
 /// The `type` of extended data in the `SSH_MSG_CHANNEL_EXTENDED_DATA` message.
@@ -382,7 +382,7 @@ pub enum ChannelRequestContext {
     #[br(pre_assert(kind == ChannelRequestContext::PTY))]
     Pty {
         /// Peer's `$TERM` environment variable value.
-        term: arch::String,
+        term: arch::Bytes,
 
         /// Terminal width, in columns.
         width_chars: u32,
@@ -397,7 +397,7 @@ pub enum ChannelRequestContext {
         height_pixels: u32,
 
         /// Encoded terminal modes.
-        modes: arch::String,
+        modes: arch::Bytes,
     },
 
     /// A request of type `x11-req`,
@@ -408,10 +408,10 @@ pub enum ChannelRequestContext {
         single_connection: arch::Bool,
 
         /// X11 authentication protocol.
-        x11_authentication_protocol: arch::String,
+        x11_authentication_protocol: arch::Bytes,
 
         /// X11 authentication cookie.
-        x11_authentication_cookie: arch::String,
+        x11_authentication_cookie: arch::Bytes,
 
         /// X11 authentication number.
         x11_screen_number: u32,
@@ -422,10 +422,10 @@ pub enum ChannelRequestContext {
     #[br(pre_assert(kind == ChannelRequestContext::ENV))]
     Env {
         /// Environment variable name.
-        name: arch::String,
+        name: arch::Bytes,
 
         /// Environment variable value.
-        value: arch::String,
+        value: arch::Bytes,
     },
 
     /// A request of type `shell`,
@@ -438,7 +438,7 @@ pub enum ChannelRequestContext {
     #[br(pre_assert(kind == ChannelRequestContext::EXEC))]
     Exec {
         /// Command to be executed.
-        command: arch::String,
+        command: arch::Bytes,
     },
 
     /// A request of type `subsystem`,
@@ -446,7 +446,7 @@ pub enum ChannelRequestContext {
     #[br(pre_assert(kind == ChannelRequestContext::SUBSYSTEM))]
     Subsystem {
         /// Name of the requested subsystem.
-        name: arch::String,
+        name: arch::Bytes,
     },
 
     /// A request of type `window-change`,
@@ -479,7 +479,7 @@ pub enum ChannelRequestContext {
     #[br(pre_assert(kind == ChannelRequestContext::SIGNAL))]
     Signal {
         /// Signal name (without the "SIG" prefix).
-        name: arch::String,
+        name: arch::Bytes,
     },
 
     /// A request of type `exit-status`,
@@ -495,7 +495,7 @@ pub enum ChannelRequestContext {
     #[br(pre_assert(kind == ChannelRequestContext::EXIT_SIGNAL))]
     ExitSignal {
         /// Signal name (without the "SIG" prefix).
-        name: arch::String,
+        name: arch::Bytes,
 
         /// Whether a core dump is triggering the signal.
         core_dumped: arch::Bool,

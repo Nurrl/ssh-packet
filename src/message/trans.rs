@@ -102,7 +102,7 @@ pub enum DisconnectReason {
 #[brw(big, magic = 2_u8)]
 pub struct Ignore {
     /// A random blob of data to ignore.
-    pub data: arch::String,
+    pub data: arch::Bytes,
 }
 
 /// The `SSH_MSG_DEBUG` message.

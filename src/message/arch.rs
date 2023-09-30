@@ -1,7 +1,7 @@
 //! Types defined in the SSH's **architecture** (`SSH-ARCH`) part of the protocol,
 //! as defined in the [RFC 4251](https://datatracker.ietf.org/doc/html/rfc4251).
 
-use std::{borrow::Cow, string::String as StdString};
+use std::borrow::Cow;
 
 use binrw::binrw;
 
@@ -12,15 +12,16 @@ use binrw::binrw;
 #[binrw]
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[brw(big)]
-pub struct String {
+pub struct Bytes {
     #[bw(calc = payload.len() as u32)]
-    len: u32,
+    size: u32,
 
-    #[br(count = len)]
-    payload: Vec<u8>,
+    #[br(map = Cow::Owned, count = size)]
+    #[bw(map = |payload| payload.as_ref())]
+    payload: Cow<'static, [u8]>,
 }
 
-impl std::ops::Deref for String {
+impl std::ops::Deref for Bytes {
     type Target = [u8];
 
     fn deref(&self) -> &Self::Target {
@@ -35,20 +36,15 @@ impl std::ops::Deref for String {
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[binrw]
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[brw(big)]
-pub struct StringUtf8 {
-    #[bw(calc = payload.len() as u32)]
-    size: u32,
-
-    #[br(try_map = |bytes: Vec<u8>| StdString::from_utf8(bytes).map(Cow::Owned), count = size)]
-    #[bw(map = |payload| payload.as_bytes())]
-    payload: Cow<'static, str>,
-}
+#[brw(big, assert(std::str::from_utf8(&self_0.payload).is_ok()))]
+pub struct StringUtf8(Bytes);
 
 impl StringUtf8 {
-    /// Create a new [`StringUtf8`] from a [`Cow`].
-    pub fn new(s: impl Into<Cow<'static, str>>) -> Self {
-        Self { payload: s.into() }
+    /// Create a new [`StringUtf8`] from a [`String`].
+    pub fn new(s: impl Into<String>) -> Self {
+        Self(Bytes {
+            payload: s.into().into_bytes().into(),
+        })
     }
 }
 
@@ -56,7 +52,8 @@ impl std::ops::Deref for StringUtf8 {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
-        self.payload.as_ref()
+        std::str::from_utf8(self.0.as_ref())
+            .expect("StringUtf8 was constructed in an unexpected way")
     }
 }
 
@@ -67,21 +64,13 @@ impl std::ops::Deref for StringUtf8 {
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[binrw]
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[brw(big)]
-pub struct StringAscii {
-    #[bw(calc = payload.len() as u32)]
-    size: u32,
-
-    #[br(try_map = |bytes: Vec<u8>| StdString::from_utf8(bytes).map(Cow::Owned), count = size)]
-    #[bw(map = |payload| payload.as_bytes())]
-    #[brw(assert(payload.is_ascii()))]
-    payload: Cow<'static, str>,
-}
+#[brw(big, assert(self_0.is_ascii()))]
+pub struct StringAscii(StringUtf8);
 
 impl StringAscii {
-    /// Create a new [`StringAscii`] from a [`Cow`].
-    pub fn new(s: impl Into<Cow<'static, str>>) -> Self {
-        Self { payload: s.into() }
+    /// Create a new [`StringAscii`] from a [`String`].
+    pub fn new(s: impl Into<String>) -> Self {
+        Self(StringUtf8::new(s))
     }
 }
 
@@ -89,7 +78,7 @@ impl std::ops::Deref for StringAscii {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
-        self.payload.as_ref()
+        &self.0
     }
 }
 
