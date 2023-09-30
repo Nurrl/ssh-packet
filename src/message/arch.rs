@@ -122,7 +122,7 @@ pub struct NameList(StringAscii);
 
 impl NameList {
     /// Create new [`NameList`] from a list of names.
-    pub fn new(names: &[&str]) -> Self {
+    pub fn new(names: &[impl std::borrow::Borrow<str>]) -> Self {
         Self(StringAscii::new(names.join(",")))
     }
 
