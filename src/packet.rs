@@ -48,7 +48,7 @@ impl Packet {
     }
 
     /// Encrypt `T` to a [`Packet`] to be sent to the remote.
-    pub fn encrypt<T, C>(message: T, cipher: &mut C) -> Result<Self, Error<C::Err>>
+    pub fn encrypt<T, C>(message: &T, cipher: &mut C) -> Result<Self, Error<C::Err>>
     where
         for<'w> T: BinWrite<Args<'w> = ()> + WriteEndian,
         C: SealingCipher,
