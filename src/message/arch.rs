@@ -10,7 +10,7 @@ use binrw::binrw;
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[binrw]
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Default, Clone, PartialEq, Eq)]
 #[brw(big)]
 pub struct Bytes {
     #[bw(calc = payload.len() as u32)]
@@ -26,6 +26,11 @@ impl Bytes {
     pub fn new(s: impl Into<Cow<'static, [u8]>>) -> Self {
         Self { payload: s.into() }
     }
+
+    /// Unpacks the `string` into a [`Vec`].
+    pub fn into_vec(self) -> Vec<u8> {
+        self.payload.into_owned()
+    }
 }
 
 impl std::ops::Deref for Bytes {
@@ -33,6 +38,26 @@ impl std::ops::Deref for Bytes {
 
     fn deref(&self) -> &Self::Target {
         self.payload.as_ref()
+    }
+}
+
+impl AsRef<[u8]> for Bytes {
+    fn as_ref(&self) -> &[u8] {
+        &self.payload
+    }
+}
+
+impl std::fmt::Debug for Bytes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("Bytes").field(&self.payload).finish()
+    }
+}
+
+impl From<Vec<u8>> for Bytes {
+    fn from(value: Vec<u8>) -> Self {
+        Self {
+            payload: value.into(),
+        }
     }
 }
 
