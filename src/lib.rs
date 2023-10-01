@@ -10,7 +10,7 @@ mod error;
 pub use error::Error;
 
 mod message;
-pub use message::{arch, connect, trans, userauth, Message};
+pub use message::{arch, connect, kex, trans, userauth, Message};
 
 mod id;
 pub use id::Id;
