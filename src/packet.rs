@@ -90,12 +90,14 @@ impl Packet {
         reader.read_exact(&mut buf).await?;
 
         let len = u32::from_be_bytes(buf);
-        let size = buf.len() + len as usize + cipher.size();
+        let size = std::mem::size_of::<u32>() + len as usize + cipher.size();
 
         let mut buf = buf.to_vec();
         buf.resize(size, 0);
 
-        reader.read_exact(&mut buf[..]).await?;
+        reader
+            .read_exact(&mut buf[std::mem::size_of::<u32>()..])
+            .await?;
 
         Ok(Self::read_args(
             &mut std::io::Cursor::new(buf),
@@ -120,7 +122,11 @@ impl Packet {
     {
         use futures::io::AsyncWriteExt;
 
-        let size = 4 + self.payload.len() + self.padding.len() + self.mac.len();
+        let size = std::mem::size_of::<u32>()
+            + std::mem::size_of::<u8>()
+            + self.payload.len()
+            + self.padding.len()
+            + self.mac.len();
 
         let mut buf = std::io::Cursor::new(vec![0u8; size]);
         self.write(&mut buf)?;
