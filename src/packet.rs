@@ -16,10 +16,10 @@ use crate::Error;
 #[brw(big)]
 #[br(import(mac_len: usize))]
 pub struct Packet {
-    #[bw(assert(payload.len() > u32::MAX as usize, "payload size is too large"), calc = payload.len() as u32)]
+    #[bw(assert(payload.len() < u32::MAX as usize, "payload size is too large"), calc = payload.len() as u32)]
     len: u32,
 
-    #[bw(assert(padding.len() > u8::MAX as usize, "padding size is too large"), calc = padding.len() as u8)]
+    #[bw(assert(padding.len() < u8::MAX as usize, "padding size is too large"), calc = padding.len() as u8)]
     padding_len: u8,
 
     /// SSH packet's payload as binary.
