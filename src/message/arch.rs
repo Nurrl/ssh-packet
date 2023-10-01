@@ -1,7 +1,7 @@
 //! Types defined in the SSH's **architecture** (`SSH-ARCH`) part of the protocol,
 //! as defined in the [RFC 4251](https://datatracker.ietf.org/doc/html/rfc4251).
 
-use std::borrow::Cow;
+use std::{borrow::Cow, ops::Deref};
 
 use binrw::binrw;
 
@@ -65,7 +65,7 @@ impl std::ops::Deref for MpInt {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[binrw]
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Default, Clone, PartialEq, Eq)]
 #[brw(big, assert(std::str::from_utf8(&self_0.payload).is_ok()))]
 pub struct StringUtf8(Bytes);
 
@@ -85,13 +85,19 @@ impl std::ops::Deref for StringUtf8 {
     }
 }
 
+impl std::fmt::Debug for StringUtf8 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("StringUtf8").field(&self.deref()).finish()
+    }
+}
+
 /// A `string` as defined in the SSH protocol,
 /// prefixed with it's `size` as a [`u32`],
 /// restricted to valid **ASCII**.
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[binrw]
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Default, Clone, PartialEq, Eq)]
 #[brw(big, assert(self_0.is_ascii()))]
 pub struct StringAscii(StringUtf8);
 
@@ -110,13 +116,19 @@ impl std::ops::Deref for StringAscii {
     }
 }
 
+impl std::fmt::Debug for StringAscii {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("StringAscii").field(&self.deref()).finish()
+    }
+}
+
 /// A `name-list` as defined in the SSH protocol,
 /// a `,`-separated list of **ASCII** identifiers,
 /// prefixed with it's `size` as a [`u32`].
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[binrw]
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Default, Clone, PartialEq, Eq)]
 #[brw(big)]
 pub struct NameList(StringAscii);
 
@@ -135,10 +147,18 @@ impl NameList {
 
 impl<'n> IntoIterator for &'n NameList {
     type Item = &'n str;
-    type IntoIter = std::str::Split<'n, char>;
+    type IntoIter = std::iter::Filter<std::str::Split<'n, char>, for<'a> fn(&'a &'n str) -> bool>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.0.split(',')
+        self.0.split(',').filter(|s| !s.is_empty())
+    }
+}
+
+impl std::fmt::Debug for NameList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("NameList")
+            .field(&self.into_iter().collect::<Vec<_>>())
+            .finish()
     }
 }
 
