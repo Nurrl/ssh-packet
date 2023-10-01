@@ -246,7 +246,7 @@ pub struct KexdhReply {
 #[derive(Debug, Clone)]
 #[brw(big, magic = 30_u8)]
 pub struct KexEcdhInit {
-    /// Client's ephemeral public key octet string
+    /// Client's ephemeral public key octet string.
     pub q_c: arch::Bytes,
 }
 
@@ -260,7 +260,7 @@ pub struct KexEcdhReply {
     /// Server's public host key.
     pub k_s: arch::Bytes,
 
-    /// Server's ephemeral public key octet string
+    /// Server's ephemeral public key octet string.
     pub q_s: arch::Bytes,
 
     /// Signature of the exchange hash.
