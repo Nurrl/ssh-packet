@@ -1,5 +1,3 @@
-use std::convert::Infallible;
-
 use crate::Error;
 
 const VERSION: &str = "2.0";
@@ -34,7 +32,7 @@ impl Id {
 
     /// Read an [`Id`], discarding any _extra lines_ sent by the server
     /// from the provided `reader`.
-    pub fn from_reader<R>(reader: &mut R) -> Result<Self, Error<Infallible>>
+    pub fn from_reader<R>(reader: &mut R) -> Result<Self, Error>
     where
         R: std::io::BufRead,
     {
@@ -54,7 +52,7 @@ impl Id {
     #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
     /// Read an [`Id`], discarding any _extra lines_ sent by the server
     /// from the provided asynchronous `reader`.
-    pub async fn from_async_reader<R>(reader: &mut R) -> Result<Self, Error<Infallible>>
+    pub async fn from_async_reader<R>(reader: &mut R) -> Result<Self, Error>
     where
         R: futures::io::AsyncBufRead + Unpin,
     {
@@ -71,7 +69,7 @@ impl Id {
     }
 
     /// Write the [`Id`] to the provided `writer`.
-    pub fn to_writer<W>(&self, writer: &mut W) -> Result<(), Error<Infallible>>
+    pub fn to_writer<W>(&self, writer: &mut W) -> Result<(), Error>
     where
         W: std::io::Write,
     {
@@ -84,7 +82,7 @@ impl Id {
     /// Write the [`Id`] to the provided asynchronous `writer`.
     #[cfg(feature = "futures")]
     #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
-    pub async fn to_async_writer<W>(&self, writer: &mut W) -> Result<(), Error<Infallible>>
+    pub async fn to_async_writer<W>(&self, writer: &mut W) -> Result<(), Error>
     where
         W: futures::io::AsyncWrite + Unpin,
     {
@@ -110,7 +108,7 @@ impl std::fmt::Display for Id {
 }
 
 impl std::str::FromStr for Id {
-    type Err = Error<Infallible>;
+    type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (id, comments) = s

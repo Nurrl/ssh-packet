@@ -1,5 +1,3 @@
-use std::convert::Infallible;
-
 use binrw::{
     binrw,
     meta::{ReadEndian, WriteEndian},
@@ -42,18 +40,18 @@ impl Packet {
     }
 
     /// Decrypt the received [`Packet`] from the remote into `T`.
-    pub fn decrypt<T, C>(self, cipher: &mut C) -> Result<T, Error<C::Err>>
+    pub fn decrypt<T, C>(self, cipher: &mut C) -> Result<T, C::Err>
     where
         for<'r> T: BinRead<Args<'r> = ()> + ReadEndian,
         C: OpeningCipher,
     {
-        let payload = cipher.open(self).map_err(Error::Cipher)?;
+        let payload = cipher.open(self)?;
 
         Ok(T::read(&mut std::io::Cursor::new(payload))?)
     }
 
     /// Encrypt `T` to a [`Packet`] to be sent to the remote.
-    pub fn encrypt<T, C>(message: &T, cipher: &mut C) -> Result<Self, Error<C::Err>>
+    pub fn encrypt<T, C>(message: &T, cipher: &mut C) -> Result<Self, C::Err>
     where
         for<'w> T: BinWrite<Args<'w> = ()> + WriteEndian,
         C: SealingCipher,
@@ -61,11 +59,11 @@ impl Packet {
         let mut payload = std::io::Cursor::new(Vec::new());
         message.write(&mut payload)?;
 
-        cipher.seal(payload.into_inner()).map_err(Error::Cipher)
+        cipher.seal(payload.into_inner())
     }
 
     /// Read a [`Packet`] from the provided `reader`.
-    pub fn from_reader<R, C>(reader: &mut R, cipher: &C) -> Result<Self, Error<Infallible>>
+    pub fn from_reader<R, C>(reader: &mut R, cipher: &C) -> Result<Self, Error>
     where
         R: std::io::Read + std::io::Seek,
         C: OpeningCipher,
@@ -76,10 +74,7 @@ impl Packet {
     /// Read a [`Packet`] from the provided asynchronous `reader`.
     #[cfg(feature = "futures")]
     #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
-    pub async fn from_async_reader<R, C>(
-        reader: &mut R,
-        cipher: &C,
-    ) -> Result<Self, Error<Infallible>>
+    pub async fn from_async_reader<R, C>(reader: &mut R, cipher: &C) -> Result<Self, Error>
     where
         R: futures::io::AsyncRead + Unpin,
         C: OpeningCipher,
@@ -106,7 +101,7 @@ impl Packet {
     }
 
     /// Write the [`Packet`] to the provided `writer`.
-    pub fn to_writer<W>(&self, writer: &mut W) -> Result<(), Error<Infallible>>
+    pub fn to_writer<W>(&self, writer: &mut W) -> Result<(), Error>
     where
         W: std::io::Write + std::io::Seek,
     {
@@ -116,7 +111,7 @@ impl Packet {
     /// Write the [`Packet`] to the provided asynchronous `writer`.
     #[cfg(feature = "futures")]
     #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
-    pub async fn to_async_writer<W>(&self, writer: &mut W) -> Result<(), Error<Infallible>>
+    pub async fn to_async_writer<W>(&self, writer: &mut W) -> Result<(), Error>
     where
         W: futures::io::AsyncWrite + Unpin,
     {
@@ -138,7 +133,7 @@ impl Packet {
 /// A cipher able to `open` a [`Packet`] and retrieve it's payload.
 pub trait OpeningCipher {
     /// The associated error type returned by the `open` method.
-    type Err;
+    type Err: From<binrw::Error>;
 
     /// The size of the Message Authentication Code for this [`OpeningCipher`], in bytes.
     fn size(&self) -> usize;
@@ -150,7 +145,7 @@ pub trait OpeningCipher {
 /// A cipher able to `seal` a payload to create a [`Packet`].
 pub trait SealingCipher {
     /// The associated error type returned by the `seal` method.
-    type Err;
+    type Err: From<binrw::Error>;
 
     /// Transform the `payload` into it's encrypted [`Packet`] using the [`SealingCipher`].
     fn seal(&mut self, payload: Vec<u8>) -> Result<Packet, Self::Err>;
@@ -165,7 +160,7 @@ mod tests {
         struct Dummy;
 
         impl OpeningCipher for Dummy {
-            type Err = ();
+            type Err = Box<dyn std::error::Error>;
 
             fn size(&self) -> usize {
                 16
@@ -177,14 +172,14 @@ mod tests {
         }
 
         impl SealingCipher for Dummy {
-            type Err = ();
+            type Err = Box<dyn std::error::Error>;
 
             fn seal(&mut self, _payload: Vec<u8>) -> Result<Packet, Self::Err> {
                 todo!()
             }
         }
 
-        let _: &dyn OpeningCipher<Err = ()> = &Dummy;
-        let _: &dyn SealingCipher<Err = ()> = &Dummy;
+        let _: &dyn OpeningCipher<Err = Box<dyn std::error::Error>> = &Dummy;
+        let _: &dyn SealingCipher<Err = Box<dyn std::error::Error>> = &Dummy;
     }
 }
