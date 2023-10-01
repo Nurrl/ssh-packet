@@ -17,7 +17,7 @@ pub enum Error<E> {
 
     /// The parsed identifier was not conformant.
     #[error("The SSH identifier was either misformatted or misprefixed")]
-    BadIdentifer,
+    BadIdentifer(String),
 
     /// An EOF occured while parsing.
     #[error("Unexpected EOF while waiting for SSH identifer")]

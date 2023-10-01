@@ -75,7 +75,10 @@ impl Id {
     where
         W: std::io::Write,
     {
-        Ok(writer.write_all(self.to_string().as_bytes())?)
+        writer.write_all(self.to_string().as_bytes())?;
+        writer.write_all(b"\r\n")?;
+
+        Ok(())
     }
 
     /// Write the [`Id`] to the provided asynchronous `writer`.
@@ -87,7 +90,10 @@ impl Id {
     {
         use futures::io::AsyncWriteExt;
 
-        Ok(writer.write_all(self.to_string().as_bytes()).await?)
+        writer.write_all(self.to_string().as_bytes()).await?;
+        writer.write_all(b"\r\n").await?;
+
+        Ok(())
     }
 }
 
@@ -99,7 +105,7 @@ impl std::fmt::Display for Id {
             write!(f, " {comments}")?;
         }
 
-        write!(f, "\r\n")
+        Ok(())
     }
 }
 
@@ -107,14 +113,9 @@ impl std::str::FromStr for Id {
     type Err = Error<Infallible>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let data = s
-            .strip_suffix('\n')
-            .map(|line| line.strip_suffix('\r').unwrap_or(line))
-            .ok_or(Error::BadIdentifer)?;
-
-        let (id, comments) = data
+        let (id, comments) = s
             .split_once(' ')
-            .map_or_else(|| (data, None), |(id, comments)| (id, Some(comments)));
+            .map_or_else(|| (s, None), |(id, comments)| (id, Some(comments)));
 
         match id.splitn(3, '-').collect::<Vec<_>>()[..] {
             ["SSH", protoversion, softwareversion]
@@ -126,7 +127,7 @@ impl std::str::FromStr for Id {
                     comments: comments.map(str::to_string),
                 })
             }
-            _ => Err(Error::BadIdentifer),
+            _ => Err(Error::BadIdentifer(s.into())),
         }
     }
 }
@@ -139,23 +140,21 @@ mod tests {
     use super::*;
 
     #[rstest]
-    #[case("SSH-2.0-billsSSH_3.6.3q3\r\n")]
-    #[case("SSH-1.99-billsSSH_3.6.3q3\n")]
-    #[case("SSH-2.0-billsSSH_3.6.3q3 with-comment\r\n")]
-    #[case("SSH-2.0-billsSSH_3.6.3q3 utf∞-comment\r\n")]
-    #[case("SSH-2.0-billsSSH_3.6.3q3 \r\n")] // empty comment
+    #[case("SSH-2.0-billsSSH_3.6.3q3")]
+    #[case("SSH-1.99-billsSSH_3.6.3q3")]
+    #[case("SSH-2.0-billsSSH_3.6.3q3 with-comment")]
+    #[case("SSH-2.0-billsSSH_3.6.3q3 utf∞-comment")]
+    #[case("SSH-2.0-billsSSH_3.6.3q3 ")] // empty comment
     fn it_parses_valid(#[case] text: &str) {
         Id::from_str(text).expect(text);
     }
 
     #[rstest]
     #[case("")]
-    #[case("\r\n")]
-    #[case("SSH-2.0-billsSSH_3.6.3q3")]
-    #[case("FOO-2.0-billsSSH_3.6.3q3\r\n")]
-    #[case("-2.0-billsSSH_3.6.3q3\r\n")]
-    #[case("SSH--billsSSH_3.6.3q3\r\n")]
-    #[case("SSH-2.0-\r\n")]
+    #[case("FOO-2.0-billsSSH_3.6.3q3")]
+    #[case("-2.0-billsSSH_3.6.3q3")]
+    #[case("SSH--billsSSH_3.6.3q3")]
+    #[case("SSH-2.0-")]
     fn it_rejects_invalid(#[case] text: &str) {
         Id::from_str(text).expect_err(text);
     }
