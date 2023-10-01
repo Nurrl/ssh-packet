@@ -4,7 +4,7 @@ use binrw::binrw;
 
 use super::{arch, trans};
 
-/// The exchange hash for ECDH `kex` is computed as the
+/// The exchange hash for ECDH `kex`, computed as the
 /// hash of the concatenation of the following.
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc5656#section-4>.
