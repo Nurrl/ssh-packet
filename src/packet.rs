@@ -16,14 +16,14 @@ use crate::Error;
 #[brw(big)]
 #[br(import(mac_len: usize))]
 pub struct Packet {
-    #[bw(assert(payload.len() < u32::MAX as usize, "payload size is too large"), calc = payload.len() as u32)]
+    #[bw(try_calc = self.size().try_into())]
     len: u32,
 
-    #[bw(assert(padding.len() < u8::MAX as usize, "padding size is too large"), calc = padding.len() as u8)]
+    #[bw(try_calc = padding.len().try_into())]
     padding_len: u8,
 
     /// SSH packet's payload as binary.
-    #[br(count = len - padding_len as u32 - 1)]
+    #[br(count = len - padding_len as u32 - std::mem::size_of::<u8>() as u32)]
     pub payload: Vec<u8>,
 
     /// SSH packet's padding as binary.
@@ -36,6 +36,11 @@ pub struct Packet {
 }
 
 impl Packet {
+    /// Calculate [`Packet`] size field from the structure.
+    pub fn size(&self) -> usize {
+        std::mem::size_of::<u8>() + self.payload.len() + self.padding.len()
+    }
+
     /// Decrypt the received [`Packet`] from the remote into `T`.
     pub fn decrypt<T, C>(self, cipher: &mut C) -> Result<T, Error<C::Err>>
     where
