@@ -19,7 +19,7 @@ impl NameList {
     }
 
     /// Retrieve the first name from `self` that is also in `other`.
-    pub fn preferred(&self, other: &Self) -> Option<&str> {
+    pub fn preferred_in(&self, other: &Self) -> Option<&str> {
         self.into_iter()
             .find(|&name| other.into_iter().any(|n| name == n))
     }

@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use binrw::binrw;
 
 use super::Bytes;
@@ -13,8 +11,8 @@ use super::Bytes;
 pub struct MpInt(Bytes);
 
 impl MpInt {
-    /// Create new [`MpInt`] from a [`Cow<[u8]>`].
-    pub fn new(s: impl Into<Cow<'static, [u8]>>) -> Self {
+    /// Create new [`MpInt`] from a [`Vec`].
+    pub fn new(s: impl Into<Vec<u8>>) -> Self {
         Self(Bytes::new(s))
     }
 }

@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ops::Deref};
+use std::ops::Deref;
 
 use binrw::binrw;
 
@@ -13,20 +13,19 @@ pub struct Bytes {
     #[bw(calc = payload.len() as u32)]
     size: u32,
 
-    #[br(map = Cow::Owned, count = size)]
-    #[bw(map = |payload| payload.as_ref())]
-    payload: Cow<'static, [u8]>,
+    #[br(count = size)]
+    payload: Vec<u8>,
 }
 
 impl Bytes {
-    /// Create new [`Bytes`] from a [`Cow<[u8]>`].
-    pub fn new(s: impl Into<Cow<'static, [u8]>>) -> Self {
+    /// Create new [`Bytes`] from a [`Vec`].
+    pub fn new(s: impl Into<Vec<u8>>) -> Self {
         Self { payload: s.into() }
     }
 
-    /// Unpacks the `string` into a [`Vec`].
+    /// Extract the [`Bytes`] into a [`Vec`].
     pub fn into_vec(self) -> Vec<u8> {
-        self.payload.into_owned()
+        self.payload
     }
 }
 
@@ -35,6 +34,12 @@ impl std::ops::Deref for Bytes {
 
     fn deref(&self) -> &Self::Target {
         self.payload.as_ref()
+    }
+}
+
+impl std::ops::DerefMut for Bytes {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.payload.as_mut()
     }
 }
 
@@ -52,9 +57,7 @@ impl std::fmt::Debug for Bytes {
 
 impl From<Vec<u8>> for Bytes {
     fn from(value: Vec<u8>) -> Self {
-        Self {
-            payload: value.into(),
-        }
+        Self { payload: value }
     }
 }
 
