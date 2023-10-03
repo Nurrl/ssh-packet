@@ -2,7 +2,7 @@
 
 use binrw::binrw;
 
-use super::{arch, trans};
+use super::arch;
 
 /// The exchange hash for ECDH `kex`, computed as the
 /// hash of the concatenation of the following.
@@ -19,10 +19,10 @@ pub struct EcdhExchange {
     pub v_s: arch::Bytes,
 
     /// Payload of the client's `SSH_MSG_KEXINIT` message.
-    pub i_c: trans::KexInit,
+    pub i_c: arch::Bytes,
 
     /// Payload of the server's `SSH_MSG_KEXINIT` message.
-    pub i_s: trans::KexInit,
+    pub i_s: arch::Bytes,
 
     /// Server's public host key.
     pub k_s: arch::Bytes,
@@ -34,5 +34,5 @@ pub struct EcdhExchange {
     pub q_s: arch::Bytes,
 
     /// Computed shared secret.
-    pub k: arch::Bytes,
+    pub k: arch::MpInt,
 }
