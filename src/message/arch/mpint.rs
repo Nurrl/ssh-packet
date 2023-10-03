@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use binrw::binrw;
 
 use super::Bytes;
@@ -12,8 +14,17 @@ pub struct MpInt(Bytes);
 
 impl MpInt {
     /// Create new [`MpInt`] from a [`Vec`].
-    pub fn new(s: impl Into<Vec<u8>>) -> Self {
-        Self(Bytes::new(s))
+    pub fn new(value: impl Into<VecDeque<u8>>) -> Self {
+        let mut vec = value.into();
+
+        match vec.front() {
+            Some(byte) if *byte >= 0x80 => {
+                vec.push_front(0);
+            }
+            _ => (),
+        };
+
+        Self(Bytes::new(vec))
     }
 }
 
@@ -22,5 +33,11 @@ impl std::ops::Deref for MpInt {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl From<Vec<u8>> for MpInt {
+    fn from(value: Vec<u8>) -> Self {
+        Self::new(value)
     }
 }
