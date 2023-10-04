@@ -1,16 +1,17 @@
 #![doc = include_str!("../README.md")]
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![warn(clippy::unwrap_used, clippy::unimplemented)]
 
 pub use ::binrw;
-
-mod packet;
-pub use packet::{OpeningCipher, Packet, SealingCipher};
 
 mod error;
 pub use error::Error;
 
-mod message;
-pub use message::{arch, connect, kex, trans, userauth, Message};
+mod packet;
+pub use packet::{OpeningCipher, Packet, SealingCipher};
 
 mod id;
 pub use id::Id;
+
+mod message;
+pub use message::{arch, connect, kex, trans, userauth, Message};

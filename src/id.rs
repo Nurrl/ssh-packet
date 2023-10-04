@@ -132,6 +132,7 @@ impl std::str::FromStr for Id {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::unimplemented)]
     use rstest::rstest;
     use std::str::FromStr;
 

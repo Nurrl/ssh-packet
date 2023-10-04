@@ -1,10 +1,7 @@
 use binrw::{
-    binrw,
     meta::{ReadEndian, WriteEndian},
     BinRead, BinWrite,
 };
-
-use crate::Error;
 
 /// Maximum size for a SSH packet, coincidentally this is the maximum size for a TCP packet.
 pub const PACKET_MAX_SIZE: usize = u16::MAX as usize;
@@ -12,33 +9,21 @@ pub const PACKET_MAX_SIZE: usize = u16::MAX as usize;
 /// A SSH 2.0 binary packet representation, including it's encrypted payload.
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-6>.
-#[binrw]
 #[derive(Debug, Clone)]
-#[brw(big)]
-#[br(import(mac_len: usize))]
+
 pub struct Packet {
-    #[br(assert(len as usize <= PACKET_MAX_SIZE, "Packet size too large"))]
-    #[bw(try_calc = self.size().try_into())]
-    len: u32,
-
-    #[bw(try_calc = padding.len().try_into())]
-    padding_len: u8,
-
     /// SSH packet's payload as binary.
-    #[br(count = len - padding_len as u32 - std::mem::size_of::<u8>() as u32)]
     pub payload: Vec<u8>,
 
     /// SSH packet's padding as binary.
-    #[br(count = padding_len)]
     pub padding: Vec<u8>,
 
     /// SSH packet's Message Authentication Code as binary.
-    #[br(count = mac_len)]
     pub mac: Vec<u8>,
 }
 
 impl Packet {
-    /// Calculate [`Packet`] size field from the structure.
+    /// Calculate [`Packet`] `len` field from the structure.
     pub fn size(&self) -> usize {
         std::mem::size_of::<u8>() + self.payload.len() + self.padding.len()
     }
@@ -67,18 +52,55 @@ impl Packet {
     }
 
     /// Read a [`Packet`] from the provided `reader`.
-    pub fn from_reader<R, C>(reader: &mut R, cipher: &C) -> Result<Self, Error>
+    pub fn from_reader<R, C>(reader: &mut R, cipher: &mut C) -> Result<Self, C::Err>
     where
-        R: std::io::Read + std::io::Seek,
+        R: std::io::Read,
         C: OpeningCipher,
     {
-        Ok(Self::read_args(reader, (cipher.size(),))?)
+        let mut buf = [0u8; 4];
+        reader.read_exact(&mut buf[..])?;
+        let len = cipher.decrypt_len(buf)?;
+
+        if len as usize > PACKET_MAX_SIZE {
+            return Err(binrw::Error::Custom {
+                pos: 0x0,
+                err: Box::new(format!("Packet size too large, {len} > {PACKET_MAX_SIZE}")),
+            })?;
+        }
+
+        let mut buf = [0u8; 1];
+        reader.read_exact(&mut buf[..])?;
+        let padlen = cipher.decrypt_padlen(buf)?;
+
+        if padlen as usize > len as usize - 1 {
+            return Err(binrw::Error::Custom {
+                pos: 0x0,
+                err: Box::new(format!("Padding size too large, {padlen} > {} - 1", len)),
+            })?;
+        }
+
+        let maclen = cipher.mac_len();
+
+        let mut payload = vec![0; len as usize - padlen as usize - std::mem::size_of_val(&padlen)];
+        reader.read_exact(&mut payload[..])?;
+
+        let mut padding = vec![0; padlen as usize];
+        reader.read_exact(&mut padding[..])?;
+
+        let mut mac = vec![0; maclen];
+        reader.read_exact(&mut mac[..])?;
+
+        Ok(Self {
+            payload,
+            padding,
+            mac,
+        })
     }
 
     /// Read a [`Packet`] from the provided asynchronous `reader`.
     #[cfg(feature = "futures")]
     #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
-    pub async fn from_async_reader<R, C>(reader: &mut R, cipher: &C) -> Result<Self, Error>
+    pub async fn from_async_reader<R, C>(reader: &mut R, cipher: &mut C) -> Result<Self, C::Err>
     where
         R: futures::io::AsyncRead + Unpin,
         C: OpeningCipher,
@@ -86,109 +108,138 @@ impl Packet {
         use futures::io::AsyncReadExt;
 
         let mut buf = [0u8; 4];
-        reader.read_exact(&mut buf).await?;
+        reader.read_exact(&mut buf[..]).await?;
+        let len = cipher.decrypt_len(buf)?;
 
-        let len = u32::from_be_bytes(buf);
-
-        if len as usize >= PACKET_MAX_SIZE {
-            return Err(Error::BinRw(binrw::Error::AssertFail {
-                pos: 0,
-                message: "Packet size too large".into(),
-            }));
+        if len as usize > PACKET_MAX_SIZE {
+            return Err(binrw::Error::Custom {
+                pos: 0x0,
+                err: Box::new(format!("Packet size too large, {len} > {PACKET_MAX_SIZE}")),
+            })?;
         }
 
-        let size = std::mem::size_of::<u32>() + len as usize + cipher.size();
+        let mut buf = [0u8; 1];
+        reader.read_exact(&mut buf[..]).await?;
+        let padlen = cipher.decrypt_padlen(buf)?;
 
-        let mut buf = buf.to_vec();
-        buf.resize(size, 0);
+        if padlen as usize > len as usize - 1 {
+            return Err(binrw::Error::Custom {
+                pos: 0x0,
+                err: Box::new(format!("Padding size too large, {padlen} > {} - 1", len)),
+            })?;
+        }
 
-        reader
-            .read_exact(&mut buf[std::mem::size_of::<u32>()..])
-            .await?;
+        let maclen = cipher.mac_len();
 
-        Self::from_reader(&mut std::io::Cursor::new(buf), cipher)
+        let mut payload = vec![0; len as usize - padlen as usize - std::mem::size_of_val(&padlen)];
+        reader.read_exact(&mut payload[..]).await?;
+
+        let mut padding = vec![0; padlen as usize];
+        reader.read_exact(&mut padding[..]).await?;
+
+        let mut mac = vec![0; maclen];
+        reader.read_exact(&mut mac[..]).await?;
+
+        Ok(Self {
+            payload,
+            padding,
+            mac,
+        })
     }
 
     /// Write the [`Packet`] to the provided `writer`.
-    pub fn to_writer<W>(&self, writer: &mut W) -> Result<(), Error>
+    pub fn to_writer<W, C>(&self, writer: &mut W, cipher: &mut C) -> Result<(), C::Err>
     where
-        W: std::io::Write + std::io::Seek,
+        W: std::io::Write,
+        C: SealingCipher,
     {
-        Ok(self.write(writer)?)
+        writer.write_all(&cipher.encrypt_len(self.size() as u32)?)?;
+        writer.write_all(&cipher.encrypt_padlen(self.padding.len() as u8)?)?;
+        writer.write_all(&self.payload)?;
+        writer.write_all(&self.padding)?;
+        writer.write_all(&self.mac)?;
+
+        Ok(())
     }
 
     /// Write the [`Packet`] to the provided asynchronous `writer`.
     #[cfg(feature = "futures")]
     #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
-    pub async fn to_async_writer<W>(&self, writer: &mut W) -> Result<(), Error>
+    pub async fn to_async_writer<W, C>(&self, writer: &mut W, cipher: &mut C) -> Result<(), C::Err>
     where
         W: futures::io::AsyncWrite + Unpin,
+        C: SealingCipher,
     {
-        use futures::io::AsyncWriteExt;
+        use futures::AsyncWriteExt;
 
-        let size = std::mem::size_of::<u32>()
-            + std::mem::size_of::<u8>()
-            + self.payload.len()
-            + self.padding.len()
-            + self.mac.len();
+        writer
+            .write_all(&cipher.encrypt_len(self.size() as u32)?)
+            .await?;
+        writer
+            .write_all(&cipher.encrypt_padlen(self.padding.len() as u8)?)
+            .await?;
+        writer.write_all(&self.payload).await?;
+        writer.write_all(&self.padding).await?;
+        writer.write_all(&self.mac).await?;
 
-        let mut buf = std::io::Cursor::new(vec![0u8; size]);
-        self.to_writer(&mut buf)?;
-
-        Ok(writer.write_all(&buf.into_inner()).await?)
+        Ok(())
     }
 }
 
 /// A cipher able to `open` a [`Packet`] and retrieve it's payload.
 pub trait OpeningCipher {
     /// The associated error type returned by the `open` method.
-    type Err: From<binrw::Error>;
+    type Err: From<binrw::Error> + From<std::io::Error>;
 
     /// The size of the Message Authentication Code for this [`OpeningCipher`], in bytes.
-    fn size(&self) -> usize;
+    fn mac_len(&self) -> usize;
 
-    /// Transform the [`Packet`] using the [`OpeningCipher`] into it's decrypted `payload`.
+    /// Decrypt the `len` field in the [`Packet`], if encrypted.
+    fn decrypt_len(&mut self, len: [u8; 4]) -> Result<u32, Self::Err> {
+        if self.mac_len() == 0 {
+            Ok(u32::from_be_bytes(self.decrypt(len)?))
+        } else {
+            Ok(u32::from_be_bytes(len))
+        }
+    }
+
+    /// Decrypt the `padlen` field in the [`Packet`].
+    fn decrypt_padlen(&mut self, len: [u8; 1]) -> Result<u8, Self::Err> {
+        Ok(u8::from_be_bytes(self.decrypt(len)?))
+    }
+
+    /// Decrypt a variable length buffer with the [`OpeningCipher`].
+    fn decrypt<B: AsMut<[u8]>>(&mut self, buf: B) -> Result<B, Self::Err>;
+
+    /// Verify the Message Authentication Code for this [`Packet`] and get it's payload.
     fn open(&mut self, packet: Packet) -> Result<Vec<u8>, Self::Err>;
 }
 
 /// A cipher able to `seal` a payload to create a [`Packet`].
 pub trait SealingCipher {
     /// The associated error type returned by the `seal` method.
-    type Err: From<binrw::Error>;
+    type Err: From<binrw::Error> + From<std::io::Error>;
 
-    /// Transform the `payload` into it's encrypted [`Packet`] using the [`SealingCipher`].
-    fn seal(&mut self, payload: Vec<u8>) -> Result<Packet, Self::Err>;
-}
+    /// The size of the Message Authentication Code for this [`SealingCipher`], in bytes.
+    fn mac_len(&self) -> usize;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn assert_traits_are_object_safe() {
-        struct Dummy;
-
-        impl OpeningCipher for Dummy {
-            type Err = Box<dyn std::error::Error>;
-
-            fn size(&self) -> usize {
-                16
-            }
-
-            fn open(&mut self, _packet: Packet) -> Result<Vec<u8>, Self::Err> {
-                todo!()
-            }
+    /// Encrypt the `len` field in the [`Packet`], if to be encrypted.
+    fn encrypt_len(&mut self, len: u32) -> Result<[u8; 4], Self::Err> {
+        if self.mac_len() == 0 {
+            Ok(self.encrypt(len.to_be_bytes())?)
+        } else {
+            Ok(len.to_be_bytes())
         }
-
-        impl SealingCipher for Dummy {
-            type Err = Box<dyn std::error::Error>;
-
-            fn seal(&mut self, _payload: Vec<u8>) -> Result<Packet, Self::Err> {
-                todo!()
-            }
-        }
-
-        let _: &dyn OpeningCipher<Err = Box<dyn std::error::Error>> = &Dummy;
-        let _: &dyn SealingCipher<Err = Box<dyn std::error::Error>> = &Dummy;
     }
+
+    /// Encrypt the `padlen` field in the [`Packet`].
+    fn encrypt_padlen(&mut self, len: u8) -> Result<[u8; 1], Self::Err> {
+        self.encrypt(len.to_be_bytes())
+    }
+
+    /// Encrypt a variable length buffer with the [`SealingCipher`].
+    fn encrypt<B: AsMut<[u8]>>(&mut self, buf: B) -> Result<B, Self::Err>;
+
+    /// Sign the Message Authentication Code for this [`Packet`] from it's payload.
+    fn seal(&mut self, payload: Vec<u8>) -> Result<Packet, Self::Err>;
 }

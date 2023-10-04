@@ -1,12 +1,8 @@
 use thiserror::Error;
 
-/// The error type used in the library.
+/// The error types that can occur when manipulating this crate.
 #[derive(Debug, Error)]
 pub enum Error {
-    /// An error occured while using [`binrw`].
-    #[error(transparent)]
-    BinRw(#[from] binrw::Error),
-
     /// An error occured while performing I/O operations.
     #[error(transparent)]
     Io(#[from] std::io::Error),
@@ -23,7 +19,6 @@ pub enum Error {
 impl PartialEq for Error {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Self::BinRw { .. }, Self::BinRw { .. }) => true,
             (Self::Io(l0), Self::Io(r0)) => l0.kind() == r0.kind(),
             _ => core::mem::discriminant(self) == core::mem::discriminant(other),
         }
