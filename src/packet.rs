@@ -59,14 +59,14 @@ impl Packet {
             })?;
         }
 
-        let mut blob = vec![0; len as usize];
-        reader.read_exact(&mut blob[..]).await?;
+        let mut buf = vec![0; len as usize];
+        reader.read_exact(&mut buf[..]).await?;
 
         let mut mac = vec![0; cipher.mac()];
         reader.read_exact(&mut mac[..]).await?;
 
-        cipher.verify(&blob, mac)?;
-        let decrypted = cipher.decrypt(blob)?;
+        cipher.verify(&buf, mac)?;
+        let decrypted = cipher.decrypt(buf)?;
 
         let (padlen, mut decrypted) =
             decrypted
@@ -134,15 +134,15 @@ pub trait OpeningCipher {
         }
     }
 
-    /// Verify the received `blob` using the [`OpeningCipher`],
+    /// Verify the received `buf` using the [`OpeningCipher`],
     /// erroring if the _Message Authentication Code_ does not match.
-    fn verify<B: AsRef<[u8]>>(&mut self, blob: B, mac: Vec<u8>) -> Result<(), Self::Err>;
+    fn verify<B: AsRef<[u8]>>(&mut self, buf: B, mac: Vec<u8>) -> Result<(), Self::Err>;
 
-    /// Decrypt the received `blob` using the [`OpeningCipher`].
+    /// Decrypt the received `buf` using the [`OpeningCipher`].
     fn decrypt<B: AsMut<[u8]>>(&mut self, buf: B) -> Result<B, Self::Err>;
 
-    /// Decompress the received `blob` using the [`OpeningCipher`].
-    fn decompress<B: AsRef<[u8]>>(&mut self, blob: B) -> Result<Vec<u8>, Self::Err>;
+    /// Decompress the received `buf` using the [`OpeningCipher`].
+    fn decompress<B: AsRef<[u8]>>(&mut self, buf: B) -> Result<Vec<u8>, Self::Err>;
 }
 
 /// A cipher able to `seal` a payload to create a [`Packet`].
@@ -162,16 +162,16 @@ pub trait SealingCipher {
         }
     }
 
-    /// Decompress the blob using the [`SealingCipher`].
-    fn compress<B: AsRef<[u8]>>(&mut self, blob: B) -> Result<Vec<u8>, Self::Err>;
+    /// Decompress the `buf` using the [`SealingCipher`].
+    fn compress<B: AsRef<[u8]>>(&mut self, buf: B) -> Result<Vec<u8>, Self::Err>;
 
-    /// Pad the blob using the [`SealingCipher`] to match MAC's block size.
-    fn pad(&mut self, blob: Vec<u8>) -> Result<Vec<u8>, Self::Err>;
+    /// Pad the `buf` using the [`SealingCipher`] to match MAC's block size.
+    fn pad(&mut self, buf: Vec<u8>) -> Result<Vec<u8>, Self::Err>;
 
-    /// Encrypt the blob using using the [`SealingCipher`].
-    fn encrypt<B: AsMut<[u8]>>(&mut self, blob: B) -> Result<B, Self::Err>;
+    /// Encrypt the `buf` using using the [`SealingCipher`].
+    fn encrypt<B: AsMut<[u8]>>(&mut self, buf: B) -> Result<B, Self::Err>;
 
-    /// Sign the blob using using the [`SealingCipher`],
+    /// Sign the `buf` using using the [`SealingCipher`],
     /// appending a _Message Authentication Code_ if needed.
-    fn sign(&mut self, blob: Vec<u8>) -> Result<Vec<u8>, Self::Err>;
+    fn sign(&mut self, buf: Vec<u8>) -> Result<Vec<u8>, Self::Err>;
 }
