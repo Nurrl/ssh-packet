@@ -65,8 +65,8 @@ impl Packet {
         let mut mac = vec![0; cipher.mac()];
         reader.read_exact(&mut mac[..]).await?;
 
-        cipher.verify(&buf, mac)?;
         let decrypted = cipher.decrypt(buf)?;
+        cipher.verify(&decrypted, mac)?;
 
         let (padlen, mut decrypted) =
             decrypted
@@ -103,15 +103,9 @@ impl Packet {
 
         let compressed = cipher.compress(&self.payload)?;
         let padded = cipher.pad(compressed)?;
-        let encrypted = cipher.encrypt(padded)?;
+        let lenghted = [cipher.encrypt_len(padded.len() as u32)?.to_vec(), padded].concat();
 
-        writer
-            .write_all(&(encrypted.len() as u32).to_be_bytes())
-            .await?;
-
-        let signed = cipher.sign(encrypted)?;
-
-        writer.write_all(&signed).await?;
+        writer.write_all(&cipher.seal(lenghted)?).await?;
 
         Ok(())
     }
@@ -171,7 +165,7 @@ pub trait SealingCipher {
     /// Encrypt the `buf` using using the [`SealingCipher`].
     fn encrypt<B: AsMut<[u8]>>(&mut self, buf: B) -> Result<B, Self::Err>;
 
-    /// Sign the `buf` using using the [`SealingCipher`],
-    /// appending a _Message Authentication Code_ if needed.
-    fn sign(&mut self, buf: Vec<u8>) -> Result<Vec<u8>, Self::Err>;
+    /// Encrypt the `buf` using using the [`SealingCipher::encrypt`],
+    /// and sign + append a _Message Authentication Code_ if needed.
+    fn seal(&mut self, buf: Vec<u8>) -> Result<Vec<u8>, Self::Err>;
 }
