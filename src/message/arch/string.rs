@@ -29,6 +29,12 @@ impl Bytes {
     }
 }
 
+impl std::fmt::Debug for Bytes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("Bytes").field(&self.payload).finish()
+    }
+}
+
 impl std::ops::Deref for Bytes {
     type Target = [u8];
 
@@ -46,12 +52,6 @@ impl std::ops::DerefMut for Bytes {
 impl AsRef<[u8]> for Bytes {
     fn as_ref(&self) -> &[u8] {
         &self.payload
-    }
-}
-
-impl std::fmt::Debug for Bytes {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("Bytes").field(&self.payload).finish()
     }
 }
 
@@ -78,6 +78,12 @@ impl StringUtf8 {
     }
 }
 
+impl std::fmt::Debug for StringUtf8 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("StringUtf8").field(&self.deref()).finish()
+    }
+}
+
 impl std::ops::Deref for StringUtf8 {
     type Target = str;
 
@@ -87,9 +93,9 @@ impl std::ops::Deref for StringUtf8 {
     }
 }
 
-impl std::fmt::Debug for StringUtf8 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("StringUtf8").field(&self.deref()).finish()
+impl From<String> for StringUtf8 {
+    fn from(value: String) -> Self {
+        Self(Bytes::new(value))
     }
 }
 
@@ -110,16 +116,16 @@ impl StringAscii {
     }
 }
 
+impl std::fmt::Debug for StringAscii {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("StringAscii").field(&self.deref()).finish()
+    }
+}
+
 impl std::ops::Deref for StringAscii {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
         &self.0
-    }
-}
-
-impl std::fmt::Debug for StringAscii {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("StringAscii").field(&self.deref()).finish()
     }
 }
