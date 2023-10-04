@@ -6,6 +6,9 @@ use binrw::{
 
 use crate::Error;
 
+/// Maximum size for a SSH packet, coincidentally this is the maximum size for a TCP packet.
+pub const PACKET_MAX_SIZE: usize = u16::MAX as usize;
+
 /// A SSH 2.0 binary packet representation, including it's encrypted payload.
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-6>.
@@ -14,6 +17,7 @@ use crate::Error;
 #[brw(big)]
 #[br(import(mac_len: usize))]
 pub struct Packet {
+    #[br(assert(len as usize <= PACKET_MAX_SIZE, "Packet size too large"))]
     #[bw(try_calc = self.size().try_into())]
     len: u32,
 
@@ -85,6 +89,14 @@ impl Packet {
         reader.read_exact(&mut buf).await?;
 
         let len = u32::from_be_bytes(buf);
+
+        if len as usize >= PACKET_MAX_SIZE {
+            return Err(Error::BinRw(binrw::Error::AssertFail {
+                pos: 0,
+                message: "Packet size too large".into(),
+            }));
+        }
+
         let size = std::mem::size_of::<u32>() + len as usize + cipher.size();
 
         let mut buf = buf.to_vec();
@@ -94,10 +106,7 @@ impl Packet {
             .read_exact(&mut buf[std::mem::size_of::<u32>()..])
             .await?;
 
-        Ok(Self::read_args(
-            &mut std::io::Cursor::new(buf),
-            (cipher.size(),),
-        )?)
+        Self::from_reader(&mut std::io::Cursor::new(buf), cipher)
     }
 
     /// Write the [`Packet`] to the provided `writer`.
@@ -124,7 +133,7 @@ impl Packet {
             + self.mac.len();
 
         let mut buf = std::io::Cursor::new(vec![0u8; size]);
-        self.write(&mut buf)?;
+        self.to_writer(&mut buf)?;
 
         Ok(writer.write_all(&buf.into_inner()).await?)
     }
