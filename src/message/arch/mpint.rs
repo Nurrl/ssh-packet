@@ -36,6 +36,12 @@ impl std::ops::Deref for MpInt {
     }
 }
 
+impl AsRef<[u8]> for MpInt {
+    fn as_ref(&self) -> &[u8] {
+        &self.0
+    }
+}
+
 impl From<Vec<u8>> for MpInt {
     fn from(value: Vec<u8>) -> Self {
         Self::new(value)
