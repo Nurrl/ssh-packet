@@ -173,5 +173,5 @@ pub trait SealingCipher {
 
     /// Sign the blob using using the [`SealingCipher`],
     /// appending a _Message Authentication Code_ if needed.
-    fn sign<B: AsMut<[u8]>>(&mut self, blob: B) -> Result<B, Self::Err>;
+    fn sign(&mut self, blob: Vec<u8>) -> Result<Vec<u8>, Self::Err>;
 }
