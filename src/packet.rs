@@ -59,17 +59,17 @@ impl Packet {
             })?;
         }
 
-        let mut buf = vec![0; len as usize];
-        reader.read_exact(&mut buf[..]).await?;
+        let mut buf = buf.to_vec();
+        buf.resize(buf.len() + len as usize, 0);
+        reader.read_exact(&mut buf[4..]).await?;
 
         let mut mac = vec![0; cipher.mac()];
         reader.read_exact(&mut mac[..]).await?;
 
-        let decrypted = cipher.decrypt(buf)?;
-        cipher.verify(&decrypted, mac)?;
+        let decrypted = cipher.open(buf, mac)?;
 
         let (padlen, mut decrypted) =
-            decrypted
+            decrypted[4..]
                 .split_first()
                 .ok_or_else(|| binrw::Error::Custom {
                     pos: 0x4,
@@ -128,15 +128,15 @@ pub trait OpeningCipher {
         }
     }
 
-    /// Verify the received `buf` using the [`OpeningCipher`],
-    /// erroring if the _Message Authentication Code_ does not match.
-    fn verify<B: AsRef<[u8]>>(&mut self, buf: B, mac: Vec<u8>) -> Result<(), Self::Err>;
-
     /// Decrypt the received `buf` using the [`OpeningCipher`].
     fn decrypt<B: AsMut<[u8]>>(&mut self, buf: B) -> Result<B, Self::Err>;
 
+    /// Decrypt the received `buf` using [`OpeningCipher::decrypt`]
+    /// and verify the received `buf` against the _Message Authentication Code_ if needed.
+    fn open(&mut self, buf: Vec<u8>, mac: Vec<u8>) -> Result<Vec<u8>, Self::Err>;
+
     /// Decompress the received `buf` using the [`OpeningCipher`].
-    fn decompress<B: AsRef<[u8]>>(&mut self, buf: B) -> Result<Vec<u8>, Self::Err>;
+    fn decompress(&mut self, buf: Vec<u8>) -> Result<Vec<u8>, Self::Err>;
 }
 
 /// A cipher able to `seal` a payload to create a [`Packet`].
