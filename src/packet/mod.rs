@@ -4,7 +4,7 @@ use binrw::{
 };
 
 mod cipher;
-pub use cipher::{OpeningCipher, SealingCipher};
+pub use cipher::{CipherCore, OpeningCipher, SealingCipher};
 
 mod mac;
 pub use mac::Mac;
@@ -47,7 +47,11 @@ impl Packet {
     /// Read a [`Packet`] from the provided asynchronous `reader`.
     #[cfg(feature = "futures")]
     #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
-    pub async fn from_async_reader<R, C>(reader: &mut R, cipher: &mut C) -> Result<Self, C::Err>
+    pub async fn from_async_reader<R, C>(
+        reader: &mut R,
+        cipher: &mut C,
+        seq: u32,
+    ) -> Result<Self, C::Err>
     where
         R: futures::io::AsyncRead + Unpin,
         C: OpeningCipher,
@@ -82,11 +86,11 @@ impl Packet {
         reader.read_exact(&mut mac[..]).await?;
 
         if cipher.mac().etm() {
-            cipher.open(&buf, mac)?;
+            cipher.open(&buf, mac, seq)?;
             cipher.decrypt(&mut buf[4..])?;
         } else {
             cipher.decrypt(&mut buf[cipher.block_size()..])?;
-            cipher.open(&buf, mac)?;
+            cipher.open(&buf, mac, seq)?;
         }
 
         let (padlen, mut decrypted) =
@@ -113,7 +117,12 @@ impl Packet {
     /// Write the [`Packet`] to the provided asynchronous `writer`.
     #[cfg(feature = "futures")]
     #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
-    pub async fn to_async_writer<W, C>(&self, writer: &mut W, cipher: &mut C) -> Result<(), C::Err>
+    pub async fn to_async_writer<W, C>(
+        &self,
+        writer: &mut W,
+        cipher: &mut C,
+        seq: u32,
+    ) -> Result<(), C::Err>
     where
         W: futures::io::AsyncWrite + Unpin,
         C: SealingCipher,
@@ -122,16 +131,17 @@ impl Packet {
 
         let compressed = cipher.compress(&self.payload)?;
 
-        let buf = cipher.pad(compressed)?;
+        let padding = cipher.padding(compressed.len());
+        let buf = cipher.pad(compressed, padding)?;
         let mut buf = [(buf.len() as u32).to_be_bytes().to_vec(), buf].concat();
 
         let (buf, mac) = if cipher.mac().etm() {
             cipher.encrypt(&mut buf[4..])?;
-            let mac = cipher.seal(&buf)?;
+            let mac = cipher.seal(&buf, seq)?;
 
             (buf, mac)
         } else {
-            let mac = cipher.seal(&buf)?;
+            let mac = cipher.seal(&buf, seq)?;
             cipher.encrypt(&mut buf[..])?;
 
             (buf, mac)
