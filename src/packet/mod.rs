@@ -56,6 +56,11 @@ impl Packet {
 
         let mut buf = vec![0; cipher.block_size()];
         reader.read_exact(&mut buf[..]).await?;
+
+        if !cipher.mac().etm() {
+            cipher.decrypt(&mut buf[..])?;
+        }
+
         let len = u32::from_be_bytes(
             buf[..4]
                 .try_into()
@@ -76,8 +81,13 @@ impl Packet {
         let mut mac = vec![0; cipher.mac().size()];
         reader.read_exact(&mut mac[..]).await?;
 
-        cipher.open(&buf, mac)?;
-        cipher.decrypt(&mut buf[4..])?;
+        if cipher.mac().etm() {
+            cipher.open(&buf, mac)?;
+            cipher.decrypt(&mut buf[4..])?;
+        } else {
+            cipher.decrypt(&mut buf[cipher.block_size()..])?;
+            cipher.open(&buf, mac)?;
+        }
 
         let (padlen, mut decrypted) =
             buf[4..].split_first().ok_or_else(|| binrw::Error::Custom {
@@ -111,13 +121,24 @@ impl Packet {
         use futures::AsyncWriteExt;
 
         let compressed = cipher.compress(&self.payload)?;
-        let padded = cipher.pad(compressed)?;
-        let mut buf = [(padded.len() as u32).to_be_bytes().to_vec(), padded].concat();
 
-        cipher.encrypt(&mut buf[4..])?;
+        let buf = cipher.pad(compressed)?;
+        let mut buf = [(buf.len() as u32).to_be_bytes().to_vec(), buf].concat();
+
+        let (buf, mac) = if cipher.mac().etm() {
+            cipher.encrypt(&mut buf[4..])?;
+            let mac = cipher.seal(&buf)?;
+
+            (buf, mac)
+        } else {
+            let mac = cipher.seal(&buf)?;
+            cipher.encrypt(&mut buf[..])?;
+
+            (buf, mac)
+        };
+
         writer.write_all(&buf).await?;
-
-        writer.write_all(&cipher.seal(&buf)?).await?;
+        writer.write_all(&mac).await?;
 
         Ok(())
     }
