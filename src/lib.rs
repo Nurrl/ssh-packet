@@ -8,7 +8,9 @@ mod error;
 pub use error::Error;
 
 mod packet;
-pub use packet::{CipherCore, Mac, OpeningCipher, Packet, SealingCipher, PACKET_MAX_SIZE};
+pub use packet::{
+    CipherCore, Mac, OpeningCipher, Packet, SealingCipher, PACKET_MAX_SIZE, PACKET_MIN_SIZE,
+};
 
 mod id;
 pub use id::Id;

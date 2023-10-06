@@ -9,8 +9,13 @@ pub use cipher::{CipherCore, OpeningCipher, SealingCipher};
 mod mac;
 pub use mac::Mac;
 
-/// Maximum size for a SSH packet, coincidentally this is the maximum size for a TCP packet.
+/// Maximum size for a SSH packet, coincidentally this is
+/// the maximum size for a TCP packet.
 pub const PACKET_MAX_SIZE: usize = u16::MAX as usize;
+
+/// Minimum size for a SSH packet, coincidentally this is
+/// the maximum size of the block cipher's largers block-size.
+pub const PACKET_MIN_SIZE: usize = 16;
 
 /// A SSH 2.0 binary packet representation, including it's encrypted payload.
 ///

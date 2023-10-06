@@ -1,9 +1,8 @@
-use super::Mac;
+use super::{Mac, PACKET_MIN_SIZE};
 
 #[cfg(doc)]
 use super::Packet;
 
-const MIN_PACKET_SIZE: usize = 16;
 const MIN_PAD_SIZE: usize = 4;
 const MIN_ALIGN: usize = 8;
 
@@ -39,7 +38,7 @@ pub trait CipherCore {
             padding
         };
 
-        if size + padding < self.block_size().max(MIN_PACKET_SIZE) {
+        if size + padding < self.block_size().max(PACKET_MIN_SIZE) {
             (padding + align) as u8
         } else {
             padding as u8
