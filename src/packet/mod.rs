@@ -14,7 +14,7 @@ pub use mac::Mac;
 pub const PACKET_MAX_SIZE: usize = u16::MAX as usize;
 
 /// Minimum size for a SSH packet, coincidentally this is
-/// the maximum size of the block cipher's largers block-size.
+/// the largest block cipher's block-size.
 pub const PACKET_MIN_SIZE: usize = 16;
 
 /// A SSH 2.0 binary packet representation, including it's encrypted payload.
