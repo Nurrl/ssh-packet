@@ -1,26 +1,27 @@
+use super::Mac;
+
+#[cfg(doc)]
+use super::Packet;
+
 /// A cipher able to `open` a [`Packet`] and retrieve it's payload.
 pub trait OpeningCipher {
     /// The associated error type returned by the `open` method.
     type Err: From<binrw::Error> + From<std::io::Error>;
 
-    /// The size of the Message Authentication Code for this [`OpeningCipher`], in bytes.
-    fn mac(&self) -> usize;
+    /// The _Message Authentication Code_ associated to the cipher.
+    type Mac: Mac;
 
-    /// Decrypt the `len` field in the [`Packet`], if encrypted.
-    fn decrypt_len(&mut self, len: [u8; 4]) -> Result<u32, Self::Err> {
-        if self.mac() == 0 {
-            Ok(u32::from_be_bytes(self.decrypt(len)?))
-        } else {
-            Ok(u32::from_be_bytes(len))
-        }
-    }
+    /// Gets a reference to the _Message Authentication Code_ for this [`OpeningCipher`].
+    fn mac(&self) -> &Self::Mac;
+
+    /// The size of a [`OpeningCipher`]'s block.
+    fn block_size(&self) -> usize;
 
     /// Decrypt the received `buf` using the [`OpeningCipher`].
-    fn decrypt<B: AsMut<[u8]>>(&mut self, buf: B) -> Result<B, Self::Err>;
+    fn decrypt<B: AsMut<[u8]>>(&mut self, buf: B) -> Result<(), Self::Err>;
 
-    /// Decrypt the received `buf` using [`OpeningCipher::decrypt`]
-    /// and verify the received `buf` against the _Message Authentication Code_ if needed.
-    fn open(&mut self, buf: Vec<u8>, mac: Vec<u8>) -> Result<Vec<u8>, Self::Err>;
+    /// Compare the received `buf` against the received _Message Authentication Code_.
+    fn open<B: AsRef<[u8]>>(&mut self, buf: B, mac: Vec<u8>) -> Result<(), Self::Err>;
 
     /// Decompress the received `buf` using the [`OpeningCipher`].
     fn decompress(&mut self, buf: Vec<u8>) -> Result<Vec<u8>, Self::Err>;
@@ -31,17 +32,11 @@ pub trait SealingCipher {
     /// The associated error type returned by the `seal` method.
     type Err: From<binrw::Error> + From<std::io::Error>;
 
-    /// The size of the Message Authentication Code for this [`SealingCipher`], in bytes.
-    fn mac(&self) -> usize;
+    /// The _Message Authentication Code_ algorithm associated to the cipher.
+    type Mac: Mac;
 
-    /// Encrypt the `len` field in the [`Packet`], if to be encrypted.
-    fn encrypt_len(&mut self, len: u32) -> Result<[u8; 4], Self::Err> {
-        if self.mac() == 0 {
-            Ok(self.encrypt(len.to_be_bytes())?)
-        } else {
-            Ok(len.to_be_bytes())
-        }
-    }
+    /// Gets a reference to the _Message Authentication Code_ algorithm for this [`SealingCipher`].
+    fn mac(&self) -> &Self::Mac;
 
     /// Decompress the `buf` using the [`SealingCipher`].
     fn compress<B: AsRef<[u8]>>(&mut self, buf: B) -> Result<Vec<u8>, Self::Err>;
@@ -50,9 +45,8 @@ pub trait SealingCipher {
     fn pad(&mut self, buf: Vec<u8>) -> Result<Vec<u8>, Self::Err>;
 
     /// Encrypt the `buf` using using the [`SealingCipher`].
-    fn encrypt<B: AsMut<[u8]>>(&mut self, buf: B) -> Result<B, Self::Err>;
+    fn encrypt<B: AsMut<[u8]>>(&mut self, buf: B) -> Result<(), Self::Err>;
 
-    /// Encrypt the `buf` using using the [`SealingCipher::encrypt`],
-    /// and sign + append a _Message Authentication Code_ if needed.
-    fn seal(&mut self, buf: Vec<u8>) -> Result<Vec<u8>, Self::Err>;
+    /// Generate a seal from the HMAC algorithm to produce a _Message Authentication Code_.
+    fn seal<B: AsRef<[u8]>>(&mut self, buf: B) -> Result<Vec<u8>, Self::Err>;
 }

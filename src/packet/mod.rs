@@ -6,6 +6,9 @@ use binrw::{
 mod cipher;
 pub use cipher::{OpeningCipher, SealingCipher};
 
+mod mac;
+pub use mac::Mac;
+
 /// Maximum size for a SSH packet, coincidentally this is the maximum size for a TCP packet.
 pub const PACKET_MAX_SIZE: usize = u16::MAX as usize;
 
@@ -51,9 +54,13 @@ impl Packet {
     {
         use futures::io::AsyncReadExt;
 
-        let mut buf = [0u8; 4];
+        let mut buf = vec![0; cipher.block_size()];
         reader.read_exact(&mut buf[..]).await?;
-        let len = cipher.decrypt_len(buf)?;
+        let len = u32::from_be_bytes(
+            buf[..4]
+                .try_into()
+                .expect("The buffer of size 4 is not of size 4"),
+        );
 
         if len as usize > PACKET_MAX_SIZE {
             return Err(binrw::Error::Custom {
@@ -62,22 +69,21 @@ impl Packet {
             })?;
         }
 
-        let mut buf = buf.to_vec();
-        buf.resize(buf.len() + len as usize, 0);
-        reader.read_exact(&mut buf[4..]).await?;
+        // Read the rest of the data from the reader
+        buf.resize(std::mem::size_of_val(&len) + len as usize, 0);
+        reader.read_exact(&mut buf[cipher.block_size()..]).await?;
 
-        let mut mac = vec![0; cipher.mac()];
+        let mut mac = vec![0; cipher.mac().size()];
         reader.read_exact(&mut mac[..]).await?;
 
-        let decrypted = cipher.open(buf, mac)?;
+        cipher.open(&buf, mac)?;
+        cipher.decrypt(&mut buf[4..])?;
 
         let (padlen, mut decrypted) =
-            decrypted[4..]
-                .split_first()
-                .ok_or_else(|| binrw::Error::Custom {
-                    pos: 0x4,
-                    err: Box::new(format!("Packet size too small ({len})")),
-                })?;
+            buf[4..].split_first().ok_or_else(|| binrw::Error::Custom {
+                pos: 0x4,
+                err: Box::new(format!("Packet size too small ({len})")),
+            })?;
 
         if *padlen as usize > len as usize - 1 {
             return Err(binrw::Error::Custom {
@@ -106,9 +112,12 @@ impl Packet {
 
         let compressed = cipher.compress(&self.payload)?;
         let padded = cipher.pad(compressed)?;
-        let lenghted = [cipher.encrypt_len(padded.len() as u32)?.to_vec(), padded].concat();
+        let mut buf = [(padded.len() as u32).to_be_bytes().to_vec(), padded].concat();
 
-        writer.write_all(&cipher.seal(lenghted)?).await?;
+        cipher.encrypt(&mut buf[4..])?;
+        writer.write_all(&buf).await?;
+
+        writer.write_all(&cipher.seal(&buf)?).await?;
 
         Ok(())
     }

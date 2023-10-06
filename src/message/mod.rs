@@ -7,6 +7,8 @@ pub mod trans;
 pub mod userauth;
 
 #[cfg(doc)]
+use trans::{KexEcdhInit, KexEcdhReply};
+#[cfg(doc)]
 use userauth::{
     AuthInfoRequest, AuthInfoResponse, AuthMethod, AuthPasswdChangereq, AuthPkOk, AuthRequest,
 };
@@ -17,10 +19,12 @@ macro_rules! message {
     ($( $name:ident($path:path) ),+ $(,)?) => {
         /// A SSH 2.0 message in it's decrypted form.
         ///
+        /// # Caveats
+        ///
         /// The [`AuthPkOk`], [`AuthPasswdChangereq`], [`AuthInfoRequest`] and [`AuthInfoResponse`]
-        /// messages still need to be looked for manually when sending a [`AuthRequest`]
-        /// respectively with a [`AuthMethod::Publickey`], [`AuthMethod::Password`] or [`AuthMethod::KeyboardInteractive`]
-        /// because they share the same `magic` byte in the protocol.
+        /// messages are not included in this enum because they share the same `magic` byte value in the protocol.
+        ///
+        /// This is the same for the [`KexEcdhInit`] and [`KexEcdhReply`].
         #[binrw]
         #[derive(Debug, Clone)]
         #[brw(big)]
