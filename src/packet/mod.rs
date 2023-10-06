@@ -29,11 +29,11 @@ pub struct Packet {
 
 impl Packet {
     /// Decrypt the received [`Packet`] from the remote into `T`.
-    pub fn read<T>(self) -> Result<T, binrw::Error>
+    pub fn read<T>(&self) -> Result<T, binrw::Error>
     where
         for<'r> T: BinRead<Args<'r> = ()> + ReadEndian,
     {
-        T::read(&mut std::io::Cursor::new(self.payload))
+        T::read(&mut std::io::Cursor::new(&self.payload))
     }
 
     /// Write `T` to a [`Packet`] to be sent to the remote.
