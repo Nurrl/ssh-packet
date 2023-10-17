@@ -25,6 +25,7 @@ macro_rules! message {
         /// messages are not included in this enum because they share the same `magic` byte value in the protocol.
         ///
         /// This is the same for the [`KexEcdhInit`] and [`KexEcdhReply`].
+        #[non_exhaustive]
         #[binrw]
         #[derive(Debug, Clone)]
         #[brw(big)]
