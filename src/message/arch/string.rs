@@ -99,6 +99,12 @@ impl From<String> for StringUtf8 {
     }
 }
 
+impl From<&'static str> for StringUtf8 {
+    fn from(value: &'static str) -> Self {
+        Self(Bytes::new(value))
+    }
+}
+
 /// A `string` as defined in the SSH protocol,
 /// prefixed with it's `size` as a [`u32`],
 /// restricted to valid **ASCII**.
@@ -127,5 +133,11 @@ impl std::ops::Deref for StringAscii {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl From<&'static str> for StringAscii {
+    fn from(value: &'static str) -> Self {
+        Self(StringUtf8::new(value))
     }
 }

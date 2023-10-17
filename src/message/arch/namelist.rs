@@ -14,8 +14,14 @@ pub struct NameList(StringAscii);
 
 impl NameList {
     /// Create new [`NameList`] from a list of names.
-    pub fn new(names: &[impl std::borrow::Borrow<str>]) -> Self {
-        Self(StringAscii::new(names.join(",")))
+    pub fn new(names: &[impl AsRef<str>]) -> Self {
+        Self(StringAscii::new(
+            names
+                .iter()
+                .map(AsRef::as_ref)
+                .collect::<Vec<_>>()
+                .join(","),
+        ))
     }
 
     /// Retrieve the first name from `self` that is also in `other`.
