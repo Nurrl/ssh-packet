@@ -138,6 +138,15 @@ mod tests {
 
     use super::*;
 
+    impl PartialEq for Error {
+        fn eq(&self, other: &Self) -> bool {
+            match (self, other) {
+                (Self::Io(l0), Self::Io(r0)) => l0.kind() == r0.kind(),
+                _ => core::mem::discriminant(self) == core::mem::discriminant(other),
+            }
+        }
+    }
+
     #[rstest]
     #[case("SSH-2.0-billsSSH_3.6.3q3")]
     #[case("SSH-1.99-billsSSH_3.6.3q3")]

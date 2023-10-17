@@ -16,12 +16,3 @@ pub enum Error {
     #[error("Unexpected EOF while waiting for SSH identifer")]
     UnexpectedEof,
 }
-
-impl PartialEq for Error {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Self::Io(l0), Self::Io(r0)) => l0.kind() == r0.kind(),
-            _ => core::mem::discriminant(self) == core::mem::discriminant(other),
-        }
-    }
-}
