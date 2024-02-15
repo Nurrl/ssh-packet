@@ -99,8 +99,8 @@ impl From<String> for StringUtf8 {
     }
 }
 
-impl From<&'static str> for StringUtf8 {
-    fn from(value: &'static str) -> Self {
+impl From<&str> for StringUtf8 {
+    fn from(value: &str) -> Self {
         Self(Bytes::new(value))
     }
 }
@@ -136,8 +136,8 @@ impl std::ops::Deref for StringAscii {
     }
 }
 
-impl From<&'static str> for StringAscii {
-    fn from(value: &'static str) -> Self {
+impl From<&str> for StringAscii {
+    fn from(value: &str) -> Self {
         Self(StringUtf8::new(value))
     }
 }
