@@ -13,7 +13,7 @@ pub use packet::{
 };
 
 mod id;
-pub use id::SshId;
+pub use id::Id;
 
 mod message;
 pub use message::{arch, connect, kex, trans, userauth, Message};

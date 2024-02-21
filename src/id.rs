@@ -9,7 +9,7 @@ const VERSION: &str = "2.0";
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-4.2>.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SshId {
+pub struct Id {
     /// The SSH's protocol version, should be `2.0` in our case.
     pub protoversion: String,
 
@@ -20,7 +20,7 @@ pub struct SshId {
     pub comments: Option<String>,
 }
 
-impl SshId {
+impl Id {
     /// Convenience method to create an `SSH-2.0` identifier string.
     pub fn v2(softwareversion: impl Into<String>, comments: Option<impl Into<String>>) -> Self {
         Self {
@@ -30,7 +30,7 @@ impl SshId {
         }
     }
 
-    /// Read an [`SshId`], discarding any _extra lines_ sent by the server
+    /// Read an [`Id`], discarding any _extra lines_ sent by the server
     /// from the provided `reader`.
     pub fn from_reader<R>(reader: &mut R) -> Result<Self, Error>
     where
@@ -50,7 +50,7 @@ impl SshId {
 
     #[cfg(feature = "futures")]
     #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
-    /// Read an [`SshId`], discarding any _extra lines_ sent by the server
+    /// Read an [`Id`], discarding any _extra lines_ sent by the server
     /// from the provided asynchronous `reader`.
     pub async fn from_async_reader<R>(reader: &mut R) -> Result<Self, Error>
     where
@@ -68,7 +68,7 @@ impl SshId {
         text.parse()
     }
 
-    /// Write the [`SshId`] to the provided `writer`.
+    /// Write the [`Id`] to the provided `writer`.
     pub fn to_writer<W>(&self, writer: &mut W) -> Result<(), Error>
     where
         W: std::io::Write,
@@ -79,7 +79,7 @@ impl SshId {
         Ok(())
     }
 
-    /// Write the [`SshId`] to the provided asynchronous `writer`.
+    /// Write the [`Id`] to the provided asynchronous `writer`.
     #[cfg(feature = "futures")]
     #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
     pub async fn to_async_writer<W>(&self, writer: &mut W) -> Result<(), Error>
@@ -95,7 +95,7 @@ impl SshId {
     }
 }
 
-impl std::fmt::Display for SshId {
+impl std::fmt::Display for Id {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "SSH-{}-{}", self.protoversion, self.softwareversion)?;
 
@@ -107,7 +107,7 @@ impl std::fmt::Display for SshId {
     }
 }
 
-impl std::str::FromStr for SshId {
+impl std::str::FromStr for Id {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -154,7 +154,7 @@ mod tests {
     #[case("SSH-2.0-billsSSH_3.6.3q3 utf∞-comment")]
     #[case("SSH-2.0-billsSSH_3.6.3q3 ")] // empty comment
     fn it_parses_valid(#[case] text: &str) {
-        SshId::from_str(text).expect(text);
+        Id::from_str(text).expect(text);
     }
 
     #[rstest]
@@ -164,16 +164,16 @@ mod tests {
     #[case("SSH--billsSSH_3.6.3q3")]
     #[case("SSH-2.0-")]
     fn it_rejects_invalid(#[case] text: &str) {
-        SshId::from_str(text).expect_err(text);
+        Id::from_str(text).expect_err(text);
     }
 
     #[rstest]
-    #[case(SshId::v2("billsSSH_3.6.3q3", None::<String>))]
-    #[case(SshId::v2("billsSSH_utf∞", None::<String>))]
-    #[case(SshId::v2("billsSSH_3.6.3q3", Some("with-comment")))]
-    #[case(SshId::v2("billsSSH_3.6.3q3", Some("utf∞-comment")))]
-    #[case(SshId::v2("billsSSH_3.6.3q3", Some("")))] // empty comment
-    fn it_reparses_consistently(#[case] id: SshId) {
+    #[case(Id::v2("billsSSH_3.6.3q3", None::<String>))]
+    #[case(Id::v2("billsSSH_utf∞", None::<String>))]
+    #[case(Id::v2("billsSSH_3.6.3q3", Some("with-comment")))]
+    #[case(Id::v2("billsSSH_3.6.3q3", Some("utf∞-comment")))]
+    #[case(Id::v2("billsSSH_3.6.3q3", Some("")))] // empty comment
+    fn it_reparses_consistently(#[case] id: Id) {
         assert_eq!(id, id.to_string().parse().unwrap());
     }
 
@@ -190,19 +190,19 @@ mod tests {
     #[cfg(feature = "futures")]
     async fn it_reads_consistently(#[case] bytes: &[u8]) {
         assert_eq!(
-            SshId::from_reader(&mut std::io::BufReader::new(bytes)),
-            SshId::from_async_reader(&mut futures::io::BufReader::new(bytes)).await
+            Id::from_reader(&mut std::io::BufReader::new(bytes)),
+            Id::from_async_reader(&mut futures::io::BufReader::new(bytes)).await
         )
     }
 
     #[rstest]
-    #[case(SshId::v2("billsSSH_3.6.3q3", None::<String>))]
-    #[case(SshId::v2("billsSSH_utf∞", None::<String>))]
-    #[case(SshId::v2("billsSSH_3.6.3q3", Some("with-comment")))]
-    #[case(SshId::v2("billsSSH_3.6.3q3", Some("utf∞-comment")))]
-    #[case(SshId::v2("billsSSH_3.6.3q3", Some("")))] // empty comment
+    #[case(Id::v2("billsSSH_3.6.3q3", None::<String>))]
+    #[case(Id::v2("billsSSH_utf∞", None::<String>))]
+    #[case(Id::v2("billsSSH_3.6.3q3", Some("with-comment")))]
+    #[case(Id::v2("billsSSH_3.6.3q3", Some("utf∞-comment")))]
+    #[case(Id::v2("billsSSH_3.6.3q3", Some("")))] // empty comment
     #[cfg(feature = "futures")]
-    async fn it_writes_consistently(#[case] id: SshId) {
+    async fn it_writes_consistently(#[case] id: Id) {
         let (mut stdbuf, mut asyncbuf) = (Vec::new(), Vec::new());
 
         assert_eq!(
