@@ -55,9 +55,9 @@ impl AsRef<[u8]> for Bytes {
     }
 }
 
-impl From<Vec<u8>> for Bytes {
-    fn from(value: Vec<u8>) -> Self {
-        Self { payload: value }
+impl<T: Into<Vec<u8>>> From<T> for Bytes {
+    fn from(value: T) -> Self {
+        Self::new(value)
     }
 }
 
@@ -76,6 +76,11 @@ impl StringUtf8 {
     pub fn new(s: impl Into<String>) -> Self {
         Self(Bytes::new(s.into().into_bytes()))
     }
+
+    /// Views this [`StringUtf8`] as a UTF-8 str.
+    pub fn as_str(&self) -> &str {
+        self
+    }
 }
 
 impl std::fmt::Debug for StringUtf8 {
@@ -93,15 +98,9 @@ impl std::ops::Deref for StringUtf8 {
     }
 }
 
-impl From<String> for StringUtf8 {
-    fn from(value: String) -> Self {
-        Self(Bytes::new(value))
-    }
-}
-
-impl From<&str> for StringUtf8 {
-    fn from(value: &str) -> Self {
-        Self(Bytes::new(value))
+impl<T: Into<String>> From<T> for StringUtf8 {
+    fn from(value: T) -> Self {
+        Self::new(value)
     }
 }
 
@@ -120,6 +119,11 @@ impl StringAscii {
     pub fn new(s: impl Into<String>) -> Self {
         Self(StringUtf8::new(s))
     }
+
+    /// Views this [`StringAscii`] of ASCII characters as a UTF-8 str.
+    pub fn as_str(&self) -> &str {
+        self
+    }
 }
 
 impl std::fmt::Debug for StringAscii {
@@ -136,8 +140,8 @@ impl std::ops::Deref for StringAscii {
     }
 }
 
-impl From<&str> for StringAscii {
-    fn from(value: &str) -> Self {
-        Self(StringUtf8::new(value))
+impl<T: Into<String>> From<T> for StringAscii {
+    fn from(value: T) -> Self {
+        Self::new(value)
     }
 }
