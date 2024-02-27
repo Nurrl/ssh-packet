@@ -41,8 +41,8 @@ macro_rules! message {
 message! {
     Disconnect(trans::Disconnect),
     Ignore(trans::Ignore),
-    Debug(trans::Debug),
     Unimplemented(trans::Unimplemented),
+    Debug(trans::Debug),
     ServiceRequest(trans::ServiceRequest),
     ServiceAccept(trans::ServiceAccept),
     KexInit(trans::KexInit),

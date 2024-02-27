@@ -106,6 +106,17 @@ pub struct Ignore {
     pub data: arch::Bytes,
 }
 
+/// The `SSH_MSG_UNIMPLEMENTED` message.
+///
+/// see <https://datatracker.ietf.org/doc/html/rfc4253#section-11.4>.
+#[binrw]
+#[derive(Debug, Clone)]
+#[brw(big, magic = 3_u8)]
+pub struct Unimplemented {
+    /// Packet sequence number of rejected message.
+    pub seq: u32,
+}
+
 /// The `SSH_MSG_DEBUG` message.
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-11.3>.
@@ -121,17 +132,6 @@ pub struct Debug {
 
     /// Language tag.
     pub language: arch::StringAscii,
-}
-
-/// The `SSH_MSG_UNIMPLEMENTED` message.
-///
-/// see <https://datatracker.ietf.org/doc/html/rfc4253#section-11.4>.
-#[binrw]
-#[derive(Debug, Clone)]
-#[brw(big, magic = 3_u8)]
-pub struct Unimplemented {
-    /// Packet sequence number of rejected message.
-    pub seq: u32,
 }
 
 /// The `SSH_MSG_SERVICE_REQUEST` message.
