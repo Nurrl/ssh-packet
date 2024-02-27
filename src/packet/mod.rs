@@ -28,25 +28,32 @@ pub struct Packet {
 }
 
 impl Packet {
+    #[deprecated(since = "0.2.2", note = "please use the [`to`] method instead")]
     /// Decrypt the received [`Packet`] from the remote into `T`.
     pub fn read<T>(&self) -> Result<T, binrw::Error>
     where
-        for<'r> T: BinRead<Args<'r> = ()> + ReadEndian,
+        T: BinRead + ReadEndian,
+        for<'a> T::Args<'a>: Default,
     {
-        T::read(&mut std::io::Cursor::new(&self.payload))
+        self.to()
     }
 
+    #[deprecated(since = "0.2.2", note = "please use the [`ToPacket`] trait instead")]
     /// Write `T` to a [`Packet`] to be sent to the remote.
     pub fn write<T>(message: &T) -> Result<Self, binrw::Error>
     where
-        for<'w> T: BinWrite<Args<'w> = ()> + WriteEndian,
+        for<'a> T: BinWrite<Args<'a> = ()> + WriteEndian,
     {
-        let mut payload = std::io::Cursor::new(Vec::new());
-        message.write(&mut payload)?;
+        message.to_packet()
+    }
 
-        Ok(Self {
-            payload: payload.into_inner(),
-        })
+    /// Try to deserialize the [`Packet`] into `T`.
+    pub fn to<T>(&self) -> Result<T, binrw::Error>
+    where
+        T: BinRead + ReadEndian,
+        for<'a> T::Args<'a>: Default,
+    {
+        T::read(&mut std::io::Cursor::new(&self.payload))
     }
 
     /// Read a [`Packet`] from the provided asynchronous `reader`.
@@ -157,4 +164,27 @@ impl Packet {
 
         Ok(())
     }
+}
+
+/// Allow types implementing [`BinWrite`] to be easily converted to a [`Packet`].
+pub trait ToPacket: BinWrite + WriteEndian
+where
+    for<'a> Self::Args<'a>: Default,
+{
+    /// Convert the current type to a [`Packet`].
+    fn to_packet(&self) -> Result<Packet, binrw::Error> {
+        let mut buffer = std::io::Cursor::new(Vec::new());
+        self.write(&mut buffer)?;
+
+        Ok(Packet {
+            payload: buffer.into_inner(),
+        })
+    }
+}
+
+impl<T> ToPacket for T
+where
+    T: BinWrite + WriteEndian,
+    for<'a> T::Args<'a>: Default,
+{
 }
