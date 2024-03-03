@@ -28,20 +28,6 @@ pub struct Packet {
 }
 
 impl Packet {
-    #[deprecated(since = "0.2.2", note = "please use the [`to`] method instead")]
-    /// Decrypt the received [`Packet`] from the remote into `T`.
-    pub fn read<T: for<'a> BinRead<Args<'a> = ()> + ReadEndian>(&self) -> Result<T, binrw::Error> {
-        self.to()
-    }
-
-    #[deprecated(since = "0.2.2", note = "please use the [`ToPacket`] trait instead")]
-    /// Write `T` to a [`Packet`] to be sent to the remote.
-    pub fn write<T: for<'a> BinWrite<Args<'a> = ()> + WriteEndian>(
-        message: &T,
-    ) -> Result<Self, binrw::Error> {
-        message.to_packet()
-    }
-
     /// Try to deserialize the [`Packet`] into `T`.
     pub fn to<T: for<'a> BinRead<Args<'a> = ()> + ReadEndian>(&self) -> Result<T, binrw::Error> {
         T::read(&mut std::io::Cursor::new(&self.payload))
