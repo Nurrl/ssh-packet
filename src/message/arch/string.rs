@@ -81,6 +81,12 @@ impl StringUtf8 {
     pub fn as_str(&self) -> &str {
         self
     }
+
+    /// Converts the [`StringUtf8`] to a [`String`].
+    pub fn into_string(self) -> String {
+        String::from_utf8(self.0.into_vec())
+            .expect("StringUtf8 was constructed in an unexpected way")
+    }
 }
 
 impl std::fmt::Debug for StringUtf8 {
@@ -94,6 +100,13 @@ impl std::ops::Deref for StringUtf8 {
 
     fn deref(&self) -> &Self::Target {
         std::str::from_utf8(self.0.as_ref())
+            .expect("StringUtf8 was constructed in an unexpected way")
+    }
+}
+
+impl std::ops::DerefMut for StringUtf8 {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        std::str::from_utf8_mut(self.0.as_mut())
             .expect("StringUtf8 was constructed in an unexpected way")
     }
 }
@@ -115,14 +128,24 @@ impl<T: Into<String>> From<T> for StringUtf8 {
 pub struct StringAscii(StringUtf8);
 
 impl StringAscii {
-    /// Create new [`StringAscii`] from a [`String`].
-    pub fn new(s: impl Into<String>) -> Self {
-        Self(StringUtf8::new(s))
+    /// Create new [`StringAscii`] from a [`String`], stripping any non-UTF8 characters.
+    pub fn new(s: impl AsRef<str>) -> Self {
+        Self(StringUtf8::new(
+            s.as_ref()
+                .chars()
+                .filter(char::is_ascii)
+                .collect::<String>(),
+        ))
     }
 
     /// Views this [`StringAscii`] of ASCII characters as a UTF-8 str.
     pub fn as_str(&self) -> &str {
         self
+    }
+
+    /// Converts the [`StringAscii`] to a [`String`].
+    pub fn into_string(self) -> String {
+        self.0.into_string()
     }
 }
 
@@ -140,7 +163,13 @@ impl std::ops::Deref for StringAscii {
     }
 }
 
-impl<T: Into<String>> From<T> for StringAscii {
+impl std::ops::DerefMut for StringAscii {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<T: AsRef<str>> From<T> for StringAscii {
     fn from(value: T) -> Self {
         Self::new(value)
     }

@@ -99,7 +99,7 @@ pub enum DisconnectReason {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-11.2>.
 #[binrw]
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 #[brw(big, magic = 2_u8)]
 pub struct Ignore {
     /// A random blob of data to ignore.
@@ -121,7 +121,7 @@ pub struct Unimplemented {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-11.3>.
 #[binrw]
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 #[brw(big, magic = 4_u8)]
 pub struct Debug {
     /// Whether the debug data should be forcefully displayed.
@@ -207,7 +207,7 @@ pub struct KexInit {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-7.3>.
 #[binrw]
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 #[brw(big, magic = 21_u8)]
 pub struct NewKeys;
 

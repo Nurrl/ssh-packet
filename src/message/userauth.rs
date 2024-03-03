@@ -103,11 +103,20 @@ pub enum AuthMethod {
 }
 
 impl AuthMethod {
-    const NONE: &str = "none";
-    const PUBLICKEY: &str = "publickey";
-    const PASSWORD: &str = "password";
-    const HOSTBASED: &str = "hostbased";
-    const KEYBOARD_INTERACTIVE: &str = "keyboard-interactive";
+    /// The SSH `none` authentication method.
+    pub const NONE: &str = "none";
+
+    /// The SSH `publickey` authentication method.
+    pub const PUBLICKEY: &str = "publickey";
+
+    /// The SSH `password` authentication method.
+    pub const PASSWORD: &str = "password";
+
+    /// The SSH `hostbased` authentication method.
+    pub const HOSTBASED: &str = "hostbased";
+
+    /// The SSH `keyboard-interactive` authentication method.
+    pub const KEYBOARD_INTERACTIVE: &str = "keyboard-interactive";
 
     /// Get the [`AuthMethod`]'s SSH identifier.
     pub fn as_str(&self) -> &'static str {
@@ -139,7 +148,7 @@ pub struct AuthPkOk {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4252#section-8>.
 #[binrw]
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 #[brw(big, magic = 60_u8)]
 pub struct AuthPasswdChangereq {
     /// Password change prompt.
@@ -204,7 +213,7 @@ pub struct AuthInfoResponse {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4252#section-5.1>.
 #[binrw]
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 #[brw(big, magic = 51_u8)]
 pub struct AuthFailure {
     /// Authentications that can continue.
@@ -218,7 +227,7 @@ pub struct AuthFailure {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4252#section-5.1>.
 #[binrw]
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 #[brw(big, magic = 52_u8)]
 pub struct AuthSuccess;
 
@@ -226,7 +235,7 @@ pub struct AuthSuccess;
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4252#section-5.4>.
 #[binrw]
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 #[brw(big, magic = 53_u8)]
 pub struct AuthBanner {
     /// The auth banner message.
