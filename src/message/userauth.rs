@@ -104,19 +104,19 @@ pub enum Method {
 
 impl Method {
     /// The SSH `none` authentication method.
-    pub const NONE: &str = "none";
+    pub const NONE: &'static str = "none";
 
     /// The SSH `publickey` authentication method.
-    pub const PUBLICKEY: &str = "publickey";
+    pub const PUBLICKEY: &'static str = "publickey";
 
     /// The SSH `password` authentication method.
-    pub const PASSWORD: &str = "password";
+    pub const PASSWORD: &'static str = "password";
 
     /// The SSH `hostbased` authentication method.
-    pub const HOSTBASED: &str = "hostbased";
+    pub const HOSTBASED: &'static str = "hostbased";
 
     /// The SSH `keyboard-interactive` authentication method.
-    pub const KEYBOARD_INTERACTIVE: &str = "keyboard-interactive";
+    pub const KEYBOARD_INTERACTIVE: &'static str = "keyboard-interactive";
 
     /// Get the [`Method`]'s SSH identifier.
     pub fn as_str(&self) -> &'static str {

@@ -53,8 +53,8 @@ pub enum GlobalRequestContext {
 }
 
 impl GlobalRequestContext {
-    const TCPIP_FORWARD: &str = "tcpip-forward";
-    const CANCEL_TCPIP_FORWARD: &str = "cancel-tcpip-forward";
+    const TCPIP_FORWARD: &'static str = "tcpip-forward";
+    const CANCEL_TCPIP_FORWARD: &'static str = "cancel-tcpip-forward";
 
     /// Get the [`GlobalRequestContext`]'s SSH identifier.
     pub fn as_str(&self) -> &'static str {
@@ -183,10 +183,10 @@ pub enum ChannelOpenContext {
 }
 
 impl ChannelOpenContext {
-    const SESSION: &str = "session";
-    const X11: &str = "x11";
-    const FORWARDED_TCPIP: &str = "forwarded-tcpip";
-    const DIRECT_TCPIP: &str = "direct-tcpip";
+    const SESSION: &'static str = "session";
+    const X11: &'static str = "x11";
+    const FORWARDED_TCPIP: &'static str = "forwarded-tcpip";
+    const DIRECT_TCPIP: &'static str = "direct-tcpip";
 
     /// Get the [`ChannelOpenContext`]'s SSH identifier.
     pub fn as_str(&self) -> &'static str {
@@ -509,17 +509,17 @@ pub enum ChannelRequestContext {
 }
 
 impl ChannelRequestContext {
-    const PTY: &str = "pty-req";
-    const X11: &str = "x11-req";
-    const ENV: &str = "env";
-    const SHELL: &str = "shell";
-    const EXEC: &str = "exec";
-    const SUBSYSTEM: &str = "subsystem";
-    const WINDOW_CHANGE: &str = "window-change";
-    const XON_XOFF: &str = "xon-xoff";
-    const SIGNAL: &str = "signal";
-    const EXIT_STATUS: &str = "exit-status";
-    const EXIT_SIGNAL: &str = "exit-signal";
+    const PTY: &'static str = "pty-req";
+    const X11: &'static str = "x11-req";
+    const ENV: &'static str = "env";
+    const SHELL: &'static str = "shell";
+    const EXEC: &'static str = "exec";
+    const SUBSYSTEM: &'static str = "subsystem";
+    const WINDOW_CHANGE: &'static str = "window-change";
+    const XON_XOFF: &'static str = "xon-xoff";
+    const SIGNAL: &'static str = "signal";
+    const EXIT_STATUS: &'static str = "exit-status";
+    const EXIT_SIGNAL: &'static str = "exit-signal";
 
     /// Get the [`ChannelRequestContext`]'s SSH identifier.
     pub fn as_str(&self) -> &'static str {
