@@ -64,33 +64,24 @@ impl GlobalRequestContext {
         }
     }
 }
-
-/// The `SSH_MSG_REQUEST_SUCCESS` message.
+/// The `SSH_MSG_REQUEST_SUCCESS` message (empty body).
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4254#section-4>.
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 81_u8)]
-pub struct RequestSuccess {
-    /// The context of the global response.
-    pub context: RequestSuccessContext,
-}
+pub struct RequestSuccess;
 
-/// The `context` in the `SSH_MSG_REQUEST_SUCCESS` message.
+/// The `SSH_MSG_REQUEST_SUCCESS` message in the context of a `tcpip-forward` global request,
+/// if the provided port was `0` and `want_reply` was set to [`true`] in the request.
+///
+/// see [RFC4254 section 7.1](https://datatracker.ietf.org/doc/html/rfc4254#section-7.1).
 #[binrw]
 #[derive(Debug, Clone)]
-#[brw(big)]
-pub enum RequestSuccessContext {
-    /// An empty response context for standard global requests.
-    Empty,
-
-    /// A reponse to a `tcpip-forward` or a `cancel-tcpip-forward`,
-    /// if the provided port was `0` and `want_reply` was [`true`],
-    /// as defined in [RFC4254 section 7.1](https://datatracker.ietf.org/doc/html/rfc4254#section-7.1).
-    BoundPort {
-        /// Port that was bound on the remote.
-        bound_port: u32,
-    },
+#[brw(big, magic = 81_u8)]
+pub struct ForwardingSuccess {
+    /// Port that was bound on the remote.
+    bound_port: u32,
 }
 
 /// The `SSH_MSG_REQUEST_FAILURE` message.
