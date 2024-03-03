@@ -14,10 +14,10 @@ pub struct NameList(StringAscii);
 
 impl NameList {
     /// Create new [`NameList`] from a list of names.
-    pub fn new(names: &[impl AsRef<str>]) -> Self {
+    pub fn new<'s, S: AsRef<str> + 's>(names: impl IntoIterator<Item = &'s S>) -> Self {
         Self(StringAscii::new(
             names
-                .iter()
+                .into_iter()
                 .map(AsRef::as_ref)
                 .collect::<Vec<_>>()
                 .join(","),
