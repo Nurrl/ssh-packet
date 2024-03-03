@@ -8,10 +8,6 @@ pub mod userauth;
 
 #[cfg(doc)]
 use trans::{KexEcdhInit, KexEcdhReply};
-#[cfg(doc)]
-use userauth::{
-    AuthInfoRequest, AuthInfoResponse, AuthMethod, AuthPasswdChangereq, AuthPkOk, AuthRequest,
-};
 
 /// The purpose of this macro is to automatically document variants
 /// and link to the underlying item documentation.
@@ -21,7 +17,7 @@ macro_rules! message {
         ///
         /// # Caveats
         ///
-        /// The [`AuthPkOk`], [`AuthPasswdChangereq`], [`AuthInfoRequest`] and [`AuthInfoResponse`]
+        /// The [`userauth::PkOk`], [`userauth::PasswdChangereq`], [`userauth::InfoRequest`] and [`userauth::InfoResponse`]
         /// messages are not included in this enum because they share the same `magic` byte value in the protocol.
         ///
         /// This is the same for the [`KexEcdhInit`] and [`KexEcdhReply`].
@@ -48,10 +44,10 @@ message! {
     KexInit(trans::KexInit),
     NewKeys(trans::NewKeys),
 
-    AuthRequest(userauth::AuthRequest),
-    AuthFailure(userauth::AuthFailure),
-    AuthSuccess(userauth::AuthSuccess),
-    AuthBanner(userauth::AuthBanner),
+    AuthRequest(userauth::Request),
+    AuthFailure(userauth::Failure),
+    AuthSuccess(userauth::Success),
+    AuthBanner(userauth::Banner),
 
     GlobalRequest(connect::GlobalRequest),
     RequestSuccess(connect::RequestSuccess),
