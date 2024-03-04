@@ -28,6 +28,7 @@ futures = { version = "0.3.28", default-features = false, features = [
     "std",
 ], optional = true }
 digest = { version = "0.10.7", default-features = false, optional = true }
+signature = { version = "2.2.0", default-features = false, optional = true }
 
 [dev-dependencies]
 rstest = "0.18.2"

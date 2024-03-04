@@ -17,4 +17,4 @@ mod id;
 pub use id::Id;
 
 mod message;
-pub use message::{arch, connect, kex, trans, userauth, Message};
+pub use message::{arch, connect, cryptography, trans, userauth, Message};

@@ -2,7 +2,7 @@ use binrw::binrw;
 
 pub mod arch;
 pub mod connect;
-pub mod kex;
+pub mod cryptography;
 pub mod trans;
 pub mod userauth;
 
