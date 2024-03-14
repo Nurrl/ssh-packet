@@ -1,6 +1,16 @@
 #![doc = include_str!("../README.md")]
+//!
+
 #![cfg_attr(docsrs, feature(doc_cfg))]
-#![warn(clippy::unwrap_used, clippy::unimplemented)]
+#![warn(
+    missing_docs,
+    clippy::unwrap_used,
+    clippy::panic,
+    clippy::unimplemented,
+    clippy::todo,
+    clippy::undocumented_unsafe_blocks
+)]
+#![forbid(unsafe_code)]
 
 pub use ::binrw;
 

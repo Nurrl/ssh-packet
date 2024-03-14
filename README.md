@@ -1,5 +1,5 @@
 # ssh-packet
-[![docs.rs](https://img.shields.io/docsrs/ssh-packet)](https://docs.rs/ssh-packet) [![Crates.io](https://img.shields.io/crates/l/ssh-packet)](https://crates.io/crates/ssh-packet)
+[![docs.rs](https://img.shields.io/docsrs/ssh-packet)](https://docs.rs/ssh-packet) [![crates.io](https://img.shields.io/crates/v/ssh-packet)](https://crates.io/crates/ssh-packet) ![license](https://img.shields.io/crates/l/assh) ![documentation 100%](https://img.shields.io/badge/documentation-100%25-8A2BE2) ![forbid unsafe](https://img.shields.io/badge/forbid-unsafe-red)
 
 Representations of SSH packets interoperable with their binary
 wire representation, using [binrw](https://docs.rs/binrw).
