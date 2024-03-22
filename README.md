@@ -12,7 +12,3 @@ This includes a partial implementation of:
 - [RFC4254: SSH Connection Protocol](https://datatracker.ietf.org/doc/html/rfc4254).
 - [RFC4256: Generic Message Exchange Authentication for SSH](https://datatracker.ietf.org/doc/html/rfc4256).
 - [RFC5656: Elliptic Curve Algorithm Integration in the SSH Transport Layer](https://datatracker.ietf.org/doc/html/rfc5656).
-
----
-
-Note: this is currently a draft and shouldn't be used, yet.
