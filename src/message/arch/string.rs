@@ -128,7 +128,7 @@ impl<T: Into<String>> From<T> for StringUtf8 {
 pub struct StringAscii(StringUtf8);
 
 impl StringAscii {
-    /// Create new [`StringAscii`] from a [`String`], stripping any non-UTF8 characters.
+    /// Create new [`StringAscii`] from a [`String`], stripping any non-ASCII characters.
     pub fn new(s: impl AsRef<str>) -> Self {
         Self(StringUtf8::new(
             s.as_ref()

@@ -17,7 +17,7 @@ pub const PACKET_MAX_SIZE: usize = u16::MAX as usize;
 /// the largest block cipher's block-size.
 pub const PACKET_MIN_SIZE: usize = 16;
 
-/// A SSH 2.0 binary packet representation, including it's encrypted payload.
+/// A SSH 2.0 binary packet representation.
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-6>.
 #[derive(Debug, Clone)]
