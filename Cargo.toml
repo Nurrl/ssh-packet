@@ -2,12 +2,12 @@
 name = "ssh-packet"
 description = "A library implementing SSH packet reading/writing using `binrw`."
 documentation = "https://docs.rs/ssh-packet"
-repository = "https://github.com/Nurrl/ssh-packet"
+repository = "https://github.com/lowlevl/ssh-packet"
 readme = "README.md"
 license = "GPL-3.0"
 keywords = ["ssh", "binary"]
 authors = ["Maya the bee <15341887+lowlevl@users.noreply.github.com>"]
-version = "0.4.3"
+version = "0.4.4"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
