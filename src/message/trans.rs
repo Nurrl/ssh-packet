@@ -142,7 +142,7 @@ pub struct Debug {
 #[brw(big, magic = 5_u8)]
 pub struct ServiceRequest {
     /// The service name to request.
-    pub service_name: arch::StringUtf8,
+    pub service_name: arch::Bytes,
 }
 
 /// The `SSH_MSG_SERVICE_ACCEPT` message.
@@ -153,7 +153,7 @@ pub struct ServiceRequest {
 #[brw(big, magic = 6_u8)]
 pub struct ServiceAccept {
     /// Service name accepted to be requested.
-    pub service_name: arch::StringUtf8,
+    pub service_name: arch::Bytes,
 }
 
 /// The `SSH_MSG_KEXINIT` message.
