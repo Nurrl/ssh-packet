@@ -81,7 +81,7 @@ pub struct RequestSuccess;
 #[brw(big, magic = 81_u8)]
 pub struct ForwardingSuccess {
     /// Port that was bound on the remote.
-    bound_port: u32,
+    pub bound_port: u32,
 }
 
 /// The `SSH_MSG_REQUEST_FAILURE` message.
