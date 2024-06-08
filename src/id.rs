@@ -8,7 +8,7 @@ const VERSION: &str = "2.0";
 /// `SSH-<protoversion>-<softwareversion>[ <comments>]`.
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4253#section-4.2>.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Id {
     /// The SSH's protocol version, should be `2.0` in our case.
     pub protoversion: String,

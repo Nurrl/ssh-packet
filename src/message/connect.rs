@@ -305,7 +305,7 @@ pub struct ChannelExtendedData {
 
 /// The `type` of extended data in the `SSH_MSG_CHANNEL_EXTENDED_DATA` message.
 #[binrw]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[brw(big)]
 pub enum ChannelExtendedDataType {
     /// `SSH_EXTENDED_DATA_STDERR`.
