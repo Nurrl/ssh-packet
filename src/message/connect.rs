@@ -1,6 +1,8 @@
 //! Messages involved in the SSH's **connect** (`SSH-CONNECT`) part of the protocol,
 //! as defined in the [RFC 4254](https://datatracker.ietf.org/doc/html/rfc4254).
 
+use std::num::NonZeroU32;
+
 use binrw::binrw;
 
 use crate::arch;
@@ -296,27 +298,11 @@ pub struct ChannelExtendedData {
     /// Recipient channel.
     pub recipient_channel: u32,
 
-    /// Type of the transmitted data.
-    pub data_type: ChannelExtendedDataType,
+    /// Type of the transmitted data, the value `1` is reserved for **stderr**.
+    pub data_type: NonZeroU32,
 
     /// Data bytes to transport.
     pub data: arch::Bytes,
-}
-
-/// The `type` of extended data in the `SSH_MSG_CHANNEL_EXTENDED_DATA` message.
-#[binrw]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[brw(big)]
-pub enum ChannelExtendedDataType {
-    /// `SSH_EXTENDED_DATA_STDERR`.
-    #[brw(magic = 1_u32)]
-    Stderr,
-
-    /// Any other extended data type, may be non-standard.
-    ///
-    /// The 'type' values in the range of `0xFE000000`
-    /// through `0xFFFFFFFF` are reserved for PRIVATE USE.
-    Other(u32),
 }
 
 /// The `SSH_MSG_CHANNEL_EOF` message.
