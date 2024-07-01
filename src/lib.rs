@@ -19,7 +19,7 @@ pub use error::Error;
 
 mod packet;
 pub use packet::{
-    CipherCore, Mac, OpeningCipher, Packet, SealingCipher, ToPacket, PACKET_MAX_SIZE,
+    CipherCore, IntoPacket, Mac, OpeningCipher, Packet, SealingCipher, PACKET_MAX_SIZE,
     PACKET_MIN_SIZE,
 };
 
