@@ -146,22 +146,23 @@ impl Packet {
 /// Allow types implementing [`BinWrite`] to be easily converted to a [`Packet`].
 pub trait IntoPacket {
     /// Convert the current type to a [`Packet`].
-    fn into_packet(self) -> Result<Packet, binrw::Error>;
+    fn into_packet(self) -> Packet;
 }
 
 impl IntoPacket for Packet {
-    fn into_packet(self) -> Result<Packet, binrw::Error> {
-        Ok(self)
+    fn into_packet(self) -> Packet {
+        self
     }
 }
 
 impl<T: for<'a> BinWrite<Args<'a> = ()> + WriteEndian> IntoPacket for &T {
-    fn into_packet(self) -> Result<Packet, binrw::Error> {
+    fn into_packet(self) -> Packet {
         let mut buffer = std::io::Cursor::new(Vec::new());
-        self.write(&mut buffer)?;
+        self.write(&mut buffer)
+            .expect("Failed to convert `impl BinWrite` type to Packet");
 
-        Ok(Packet {
+        Packet {
             payload: buffer.into_inner(),
-        })
+        }
     }
 }
