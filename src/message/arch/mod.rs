@@ -10,5 +10,5 @@ pub use mpint::MpInt;
 mod namelist;
 pub use namelist::NameList;
 
-mod string;
-pub use string::{Bytes, StringAscii, StringUtf8};
+mod bytes;
+pub use bytes::{Bytes, StringAscii, StringUtf8};
