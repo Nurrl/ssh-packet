@@ -2,14 +2,14 @@
 
 use binrw::binwrite;
 
-use super::arch;
+use super::{arch, trans};
 
 /// The exchange hash for ECDH, computed as the
 /// hash of the concatenation of the following.
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc5656#section-4>.
 #[binwrite]
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 #[bw(big)]
 pub struct EcdhExchange<'e> {
     /// Client's identification string (`\r` and `\n` excluded).
@@ -19,10 +19,10 @@ pub struct EcdhExchange<'e> {
     pub v_s: &'e arch::Bytes,
 
     /// Payload of the client's `SSH_MSG_KEXINIT` message.
-    pub i_c: &'e arch::Bytes,
+    pub i_c: arch::Lengthed<&'e trans::KexInit>,
 
     /// Payload of the server's `SSH_MSG_KEXINIT` message.
-    pub i_s: &'e arch::Bytes,
+    pub i_s: arch::Lengthed<&'e trans::KexInit>,
 
     /// Server's public host key.
     pub k_s: &'e arch::Bytes,
@@ -57,7 +57,7 @@ impl EcdhExchange<'_> {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4252#section-7>.
 #[binwrite]
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 #[bw(big)]
 pub struct PublickeySignature<'s> {
     /// The session identifier issued by the key-exchange.

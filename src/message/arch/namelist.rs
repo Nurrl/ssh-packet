@@ -31,19 +31,19 @@ impl NameList {
     }
 }
 
+impl std::fmt::Debug for NameList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("NameList")
+            .field(&self.into_iter().collect::<Vec<_>>())
+            .finish()
+    }
+}
+
 impl<'n> IntoIterator for &'n NameList {
     type Item = &'n str;
     type IntoIter = std::iter::Filter<std::str::Split<'n, char>, for<'a> fn(&'a &'n str) -> bool>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.split(',').filter(|s| !s.is_empty())
-    }
-}
-
-impl std::fmt::Debug for NameList {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("NameList")
-            .field(&self.into_iter().collect::<Vec<_>>())
-            .finish()
     }
 }

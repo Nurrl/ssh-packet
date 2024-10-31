@@ -12,3 +12,6 @@ pub use namelist::NameList;
 
 mod bytes;
 pub use bytes::{Bytes, StringAscii, StringUtf8};
+
+mod lengthed;
+pub use lengthed::Lengthed;
