@@ -33,14 +33,10 @@ impl Packet {
         T::read(&mut std::io::Cursor::new(&self.payload))
     }
 
-    /// Read a [`Packet`] from the provided asynchronous `reader`.
     #[cfg(feature = "futures")]
     #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
-    pub async fn from_async_reader<R, C>(
-        reader: &mut R,
-        cipher: &mut C,
-        seq: u32,
-    ) -> Result<Self, C::Err>
+    /// Read a [`Packet`] from the provided asynchronous `reader`.
+    pub async fn from_reader<R, C>(reader: &mut R, cipher: &mut C, seq: u32) -> Result<Self, C::Err>
     where
         R: futures::io::AsyncRead + Unpin,
         C: OpeningCipher,
@@ -103,10 +99,10 @@ impl Packet {
         Ok(Self { payload })
     }
 
-    /// Write the [`Packet`] to the provided asynchronous `writer`.
     #[cfg(feature = "futures")]
     #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
-    pub async fn to_async_writer<W, C>(
+    /// Write the [`Packet`] to the provided asynchronous `writer`.
+    pub async fn to_writer<W, C>(
         &self,
         writer: &mut W,
         cipher: &mut C,

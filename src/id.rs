@@ -30,29 +30,11 @@ impl Id {
         }
     }
 
-    /// Read an [`Id`], discarding any _extra lines_ sent by the server
-    /// from the provided `reader`.
-    pub fn from_reader<R>(reader: &mut R) -> Result<Self, Error>
-    where
-        R: std::io::BufRead,
-    {
-        let text = std::io::BufRead::lines(reader)
-            // Skip extra lines the server can send before identifying
-            .find(|line| {
-                line.as_deref()
-                    .map(|line| line.starts_with("SSH"))
-                    .unwrap_or(true)
-            })
-            .ok_or(Error::UnexpectedEof)??;
-
-        text.parse()
-    }
-
     #[cfg(feature = "futures")]
     #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
     /// Read an [`Id`], discarding any _extra lines_ sent by the server
     /// from the provided asynchronous `reader`.
-    pub async fn from_async_reader<R>(reader: &mut R) -> Result<Self, Error>
+    pub async fn from_reader<R>(reader: &mut R) -> Result<Self, Error>
     where
         R: futures::io::AsyncBufRead + Unpin,
     {
@@ -68,21 +50,10 @@ impl Id {
         text.parse()
     }
 
-    /// Write the [`Id`] to the provided `writer`.
-    pub fn to_writer<W>(&self, writer: &mut W) -> Result<(), Error>
-    where
-        W: std::io::Write,
-    {
-        writer.write_all(self.to_string().as_bytes())?;
-        writer.write_all(b"\r\n")?;
-
-        Ok(())
-    }
-
-    /// Write the [`Id`] to the provided asynchronous `writer`.
     #[cfg(feature = "futures")]
     #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
-    pub async fn to_async_writer<W>(&self, writer: &mut W) -> Result<(), Error>
+    /// Write the [`Id`] to the provided asynchronous `writer`.
+    pub async fn to_writer<W>(&self, writer: &mut W) -> Result<(), Error>
     where
         W: futures::io::AsyncWrite + Unpin,
     {
@@ -175,40 +146,5 @@ mod tests {
     #[case(Id::v2("billsSSH_3.6.3q3", Some("")))] // empty comment
     fn it_reparses_consistently(#[case] id: Id) {
         assert_eq!(id, id.to_string().parse().unwrap());
-    }
-
-    #[rstest]
-    #[case(b"")]
-    #[case(&[255])]
-    #[case(&[255, 255])]
-    #[case(b"SSH-2.0-billsSSH_3.6.3q3\r\n")]
-    #[case(b"SSH-1.99-billsSSH_3.6.3q3\n")]
-    #[case(b"SSH-2.0-billsSSH_3.6.3q3 with-comment\r\n")]
-    #[case(b"This is extra text\r\nIt is skipped by the parser\r\nSSH-2.0-billsSSH_3.6.3q3\r\n")]
-    #[case(b"This is extra text\r\nIt is skipped by the parser\r\n")]
-    #[case(b"This is extra text")]
-    #[cfg(feature = "futures")]
-    async fn it_reads_consistently(#[case] bytes: &[u8]) {
-        assert_eq!(
-            Id::from_reader(&mut std::io::BufReader::new(bytes)),
-            Id::from_async_reader(&mut futures::io::BufReader::new(bytes)).await
-        )
-    }
-
-    #[rstest]
-    #[case(Id::v2("billsSSH_3.6.3q3", None::<String>))]
-    #[case(Id::v2("billsSSH_utf∞", None::<String>))]
-    #[case(Id::v2("billsSSH_3.6.3q3", Some("with-comment")))]
-    #[case(Id::v2("billsSSH_3.6.3q3", Some("utf∞-comment")))]
-    #[case(Id::v2("billsSSH_3.6.3q3", Some("")))] // empty comment
-    #[cfg(feature = "futures")]
-    async fn it_writes_consistently(#[case] id: Id) {
-        let (mut stdbuf, mut asyncbuf) = (Vec::new(), Vec::new());
-
-        assert_eq!(
-            id.to_writer(&mut stdbuf),
-            id.to_async_writer(&mut asyncbuf).await
-        );
-        assert_eq!(stdbuf, asyncbuf);
     }
 }
