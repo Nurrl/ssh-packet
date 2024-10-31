@@ -1,17 +1,20 @@
 //! Types defined in the SSH's **architecture** (`SSH-ARCH`) part of the protocol,
 //! as defined in the [RFC 4251](https://datatracker.ietf.org/doc/html/rfc4251).
 
-mod bool;
-pub use bool::Bool;
+mod bytes;
+pub use bytes::Bytes;
 
-mod mpint;
-pub use mpint::MpInt;
+mod string;
+pub use string::{StringAscii, StringUtf8};
 
 mod namelist;
 pub use namelist::NameList;
 
-mod bytes;
-pub use bytes::{Bytes, StringAscii, StringUtf8};
+mod mpint;
+pub use mpint::MpInt;
+
+mod bool;
+pub use bool::Bool;
 
 mod lengthed;
 pub use lengthed::Lengthed;
