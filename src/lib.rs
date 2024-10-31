@@ -26,5 +26,8 @@ pub use packet::{
 mod id;
 pub use id::Id;
 
-mod message;
-pub use message::{arch, connect, crypto, trans, userauth, Message};
+pub mod arch;
+pub mod connect;
+pub mod crypto;
+pub mod trans;
+pub mod userauth;
