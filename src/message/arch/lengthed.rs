@@ -1,6 +1,9 @@
 use std::{io, ops::Deref};
 
-use binrw::{BinRead, BinWrite};
+use binrw::{
+    meta::{ReadEndian, WriteEndian},
+    BinRead, BinWrite,
+};
 
 /// A _value_, prefixed with it’s `size` as a [`u32`].
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -41,6 +44,13 @@ where
     }
 }
 
+impl<T> ReadEndian for Lengthed<T>
+where
+    T: ReadEndian,
+{
+    const ENDIAN: binrw::meta::EndianKind = T::ENDIAN;
+}
+
 impl<T> BinWrite for Lengthed<T>
 where
     T: BinWrite,
@@ -63,4 +73,11 @@ where
         size.write_be(writer)?;
         Ok(writer.write_all(&buf)?)
     }
+}
+
+impl<T> WriteEndian for Lengthed<T>
+where
+    T: WriteEndian,
+{
+    const ENDIAN: binrw::meta::EndianKind = T::ENDIAN;
 }
