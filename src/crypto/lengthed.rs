@@ -5,7 +5,7 @@ use binrw::{
     BinRead, BinWrite,
 };
 
-/// A _value_, prefixed with it’s `size` as a [`u32`].
+/// An helper to prefix a serializable value with it's `size`.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Lengthed<T>(pub T);
 

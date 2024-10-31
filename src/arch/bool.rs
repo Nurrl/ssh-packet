@@ -33,3 +33,9 @@ impl std::convert::From<bool> for Bool {
         Self(value)
     }
 }
+
+impl std::convert::From<Bool> for bool {
+    fn from(value: Bool) -> Self {
+        value.0
+    }
+}

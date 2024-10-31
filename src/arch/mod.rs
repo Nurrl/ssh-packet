@@ -15,6 +15,3 @@ pub use mpint::MpInt;
 
 mod bool;
 pub use bool::Bool;
-
-mod lengthed;
-pub use lengthed::Lengthed;
