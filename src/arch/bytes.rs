@@ -1,8 +1,14 @@
 use binrw::{BinRead, BinWrite};
 
+#[cfg(feature = "zeroize")]
+use zeroize::Zeroize;
+
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "zeroize", derive(Zeroize))]
 enum Inner<'b> {
     Owned(Vec<u8>),
+
+    #[cfg_attr(feature = "zeroize", zeroize(skip))]
     Borrowed(&'b [u8]),
 }
 
@@ -10,6 +16,8 @@ enum Inner<'b> {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "zeroize", derive(Zeroize))]
+#[cfg_attr(feature = "zeroize", zeroize(drop))]
 pub struct Bytes<'b> {
     inner: Inner<'b>,
 }

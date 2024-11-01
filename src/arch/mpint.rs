@@ -1,47 +1,40 @@
-use binrw::{BinRead, BinWrite};
+use binrw::binrw;
+
+#[cfg(feature = "zeroize")]
+use zeroize::Zeroize;
 
 use super::Bytes;
 
 /// A `mpint` as defined in the SSH protocol.
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
+#[binrw]
 #[derive(Debug, Default, Clone)]
-pub struct MpInt<'b>(pub Bytes<'b>);
+#[cfg_attr(feature = "zeroize", derive(Zeroize))]
+pub struct MpInt<'b>(Bytes<'b>);
 
-impl BinRead for MpInt<'_> {
-    type Args<'a> = ();
+impl<'b> MpInt<'b> {
+    /// Create a [`MpInt`] from _bytes_.
+    pub fn from_bytes(bytes: impl Into<Bytes<'b>>) -> Self {
+        Self(bytes.into())
+    }
 
-    fn read_options<R: std::io::Read + std::io::Seek>(
-        reader: &mut R,
-        endian: binrw::Endian,
-        args: Self::Args<'_>,
-    ) -> binrw::BinResult<Self> {
-        BinRead::read_options(reader, endian, args).map(Self)
+    /// Create a [`MpInt`] from a _slice_, copying it if necessary to ensure it is represented as positive.
+    pub fn positive(value: &'b [u8]) -> Self {
+        match value.first() {
+            Some(byte) if *byte >= 0x80 => {
+                let mut buffer = vec![0u8; value.len() + 1];
+                buffer[1..].copy_from_slice(value);
+
+                Self(Bytes::owned(buffer))
+            }
+            _ => Self(Bytes::borrowed(value)),
+        }
     }
 }
 
-impl BinWrite for MpInt<'_> {
-    type Args<'a> = ();
-
-    fn write_options<W: std::io::Write + std::io::Seek>(
-        &self,
-        writer: &mut W,
-        endian: binrw::Endian,
-        args: Self::Args<'_>,
-    ) -> binrw::BinResult<()> {
-        let buf = self.0.as_ref();
-
-        // (SSH-ARCH) By convention, a number that is used in modular computations in
-        // Z_n SHOULD be represented in the range 0 <= x < n.
-        // ---
-        // So we clamp the number to a positive one.
-        match buf.first() {
-            Some(byte) if *byte >= 0x80 => {
-                writer.write_all(&[0])?;
-            }
-            _ => (),
-        };
-
-        buf.write_options(writer, endian, args)
+impl AsRef<[u8]> for MpInt<'_> {
+    fn as_ref(&self) -> &[u8] {
+        self.0.as_ref()
     }
 }

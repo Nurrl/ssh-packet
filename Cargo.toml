@@ -30,6 +30,7 @@ futures = { version = "0.3.28", default-features = false, features = [
 ], optional = true }
 digest = { version = "0.10.7", default-features = false, optional = true }
 signature = { version = "2.2.0", default-features = false, optional = true }
+zeroize = { version = "1.8.1", features = ["derive"], optional = true }
 
 [dev-dependencies]
 rstest = "0.21.0"
