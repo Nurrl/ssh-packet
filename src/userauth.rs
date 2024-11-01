@@ -11,26 +11,26 @@ use crate::arch;
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 50_u8)]
-pub struct Request {
+pub struct Request<'b> {
     /// Username for the auth request.
-    pub username: arch::StringUtf8,
+    pub username: arch::Utf8<'b>,
 
     /// Service name to query.
-    pub service_name: arch::StringAscii,
+    pub service_name: arch::Ascii<'b>,
 
-    #[bw(calc = arch::StringAscii::new(method.as_str()))]
-    auth_method: arch::StringAscii,
+    #[bw(calc = method.as_ascii())]
+    auth_method: arch::Ascii<'b>,
 
     /// Authentication method used.
-    #[br(args(&auth_method))]
-    pub method: Method,
+    #[br(args(&auth_method.as_ref()))]
+    pub method: Method<'b>,
 }
 
 /// The authentication method in the `SSH_MSG_USERAUTH_REQUEST` message.
 #[binrw]
 #[derive(Debug, Clone)]
 #[br(import(method: &str))]
-pub enum Method {
+pub enum Method<'b> {
     /// Authenticate using the `none` method,
     /// as defined in [RFC4252 section 5.2](https://datatracker.ietf.org/doc/html/rfc4252#section-5.2).
     #[br(pre_assert(method == Method::NONE))]
@@ -44,14 +44,14 @@ pub enum Method {
         signed: arch::Bool,
 
         /// Public key algorithm's name.
-        algorithm: arch::Bytes,
+        algorithm: arch::Bytes<'b>,
         /// Public key blob.
-        blob: arch::Bytes,
+        blob: arch::Bytes<'b>,
 
         /// The optional signature of the authentication packet,
         /// signed with the according private key.
         #[br(if(*signed))]
-        signature: Option<arch::Bytes>,
+        signature: Option<arch::Bytes<'b>>,
     },
 
     /// Authenticate using the `password` method,
@@ -62,12 +62,12 @@ pub enum Method {
         change: arch::Bool,
 
         /// Plaintext password.
-        password: arch::StringUtf8,
+        password: arch::Utf8<'b>,
 
         /// In the case of a the receival of a [`PasswdChangereq`],
         /// the new password to be set in place of the old one.
         #[br(if(*change))]
-        new: Option<arch::StringUtf8>,
+        new: Option<arch::Utf8<'b>>,
     },
 
     /// Authenticate using the `hostbased` method,
@@ -75,19 +75,19 @@ pub enum Method {
     #[br(pre_assert(method == Method::HOSTBASED))]
     Hostbased {
         /// Public key algorithm for the host key.
-        algorithm: arch::Bytes,
+        algorithm: arch::Bytes<'b>,
 
         /// Public host key and certificates for client host.
-        host_key: arch::Bytes,
+        host_key: arch::Bytes<'b>,
 
         /// Client host name expressed as the FQDN.
-        client_fqdn: arch::StringAscii,
+        client_fqdn: arch::Ascii<'b>,
 
         /// User name on the client host.
-        username: arch::StringUtf8,
+        username: arch::Utf8<'b>,
 
         /// The signature of the authentication packet.
-        signature: arch::Bytes,
+        signature: arch::Bytes<'b>,
     },
 
     /// Authenticate using the `keyboard-interactive` method,
@@ -95,14 +95,14 @@ pub enum Method {
     #[br(pre_assert(method == Method::KEYBOARD_INTERACTIVE))]
     KeyboardInteractive {
         /// Language tag.
-        language: arch::StringAscii,
+        language: arch::Ascii<'b>,
 
         /// A hint for the prefered interactive submethod.
-        submethods: arch::StringUtf8,
+        submethods: arch::Utf8<'b>,
     },
 }
 
-impl Method {
+impl Method<'_> {
     /// The SSH `none` authentication method.
     pub const NONE: &'static str = "none";
 
@@ -119,14 +119,15 @@ impl Method {
     pub const KEYBOARD_INTERACTIVE: &'static str = "keyboard-interactive";
 
     /// Get the [`Method`]'s SSH identifier.
-    pub fn as_str(&self) -> &'static str {
-        match self {
+    pub fn as_ascii(&self) -> arch::Ascii<'static> {
+        arch::Ascii::borrowed(match self {
             Self::None { .. } => Self::NONE,
             Self::Publickey { .. } => Self::PUBLICKEY,
             Self::Password { .. } => Self::PASSWORD,
             Self::Hostbased { .. } => Self::HOSTBASED,
             Self::KeyboardInteractive { .. } => Self::KEYBOARD_INTERACTIVE,
-        }
+        })
+        .expect("non UTF-8 method identifer present in the code")
     }
 }
 
@@ -136,12 +137,12 @@ impl Method {
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 60_u8)]
-pub struct PkOk {
+pub struct PkOk<'b> {
     /// Public key algorithm name from the request.
-    pub algorithm: arch::Bytes,
+    pub algorithm: arch::Bytes<'b>,
 
     /// Public key blob from the request.
-    pub blob: arch::Bytes,
+    pub blob: arch::Bytes<'b>,
 }
 
 /// The `SSH_MSG_USERAUTH_PASSWD_CHANGEREQ` message.
@@ -150,12 +151,12 @@ pub struct PkOk {
 #[binrw]
 #[derive(Debug, Default, Clone)]
 #[brw(big, magic = 60_u8)]
-pub struct PasswdChangereq {
+pub struct PasswdChangereq<'b> {
     /// Password change prompt.
-    pub prompt: arch::StringUtf8,
+    pub prompt: arch::Utf8<'b>,
 
     /// Language tag (deprecated).
-    pub language: arch::StringAscii,
+    pub language: arch::Ascii<'b>,
 }
 
 /// The `SSH_MSG_USERAUTH_INFO_REQUEST` message.
@@ -164,31 +165,31 @@ pub struct PasswdChangereq {
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 60_u8)]
-pub struct InfoRequest {
+pub struct InfoRequest<'b> {
     /// Name of the challenge.
-    pub name: arch::StringUtf8,
+    pub name: arch::Utf8<'b>,
 
     /// Instructions for the challenge.
-    pub instruction: arch::StringUtf8,
+    pub instruction: arch::Utf8<'b>,
 
     /// Language tag (deprecated).
-    pub language: arch::StringAscii,
+    pub language: arch::Ascii<'b>,
 
     #[bw(calc = prompts.len() as u32)]
     num_prompts: u32,
 
     /// The challenge's prompts.
     #[br(count = num_prompts)]
-    pub prompts: Vec<InfoRequestPrompt>,
+    pub prompts: Vec<InfoRequestPrompt<'static>>,
 }
 
 /// A prompt in the `SSH_MSG_USERAUTH_INFO_REQUEST` message.
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big)]
-pub struct InfoRequestPrompt {
+pub struct InfoRequestPrompt<'b> {
     /// Challenge prompt text.
-    pub prompt: arch::StringUtf8,
+    pub prompt: arch::Utf8<'b>,
 
     /// Whether the client should echo back typed characters.
     pub echo: arch::Bool,
@@ -206,7 +207,7 @@ pub struct InfoResponse {
 
     /// Responses to the provided challenge.
     #[br(count = num_responses)]
-    pub responses: Vec<arch::StringUtf8>,
+    pub responses: Vec<arch::Utf8<'static>>,
 }
 
 /// The `SSH_MSG_USERAUTH_FAILURE` message.
@@ -215,9 +216,9 @@ pub struct InfoResponse {
 #[binrw]
 #[derive(Debug, Default, Clone)]
 #[brw(big, magic = 51_u8)]
-pub struct Failure {
+pub struct Failure<'b> {
     /// Authentications that can continue.
-    pub continue_with: arch::NameList,
+    pub continue_with: arch::NameList<'b>,
 
     /// Partial success.
     pub partial_success: arch::Bool,
@@ -237,10 +238,10 @@ pub struct Success;
 #[binrw]
 #[derive(Debug, Default, Clone)]
 #[brw(big, magic = 53_u8)]
-pub struct Banner {
+pub struct Banner<'b> {
     /// The auth banner message.
-    pub message: arch::StringUtf8,
+    pub message: arch::Utf8<'b>,
 
     /// Language tag.
-    pub language: arch::StringAscii,
+    pub language: arch::Ascii<'b>,
 }

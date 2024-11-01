@@ -1,6 +1,6 @@
 use binrw::binrw;
 
-use super::Bytes2;
+use super::Bytes;
 
 /// A `string` as defined in the SSH protocol, restricted to valid **UTF-8**.
 ///
@@ -8,17 +8,17 @@ use super::Bytes2;
 #[binrw]
 #[derive(Default, Clone)]
 #[br(assert(std::str::from_utf8(self_0.as_ref()).is_ok()))]
-pub struct Utf8<'b>(Bytes2<'b>);
+pub struct Utf8<'b>(Bytes<'b>);
 
 impl<'b> Utf8<'b> {
     /// Create an [`Utf8`] string from a [`String`].
     pub fn owned(value: String) -> Self {
-        Self(Bytes2::owned(value.into_bytes()))
+        Self(Bytes::owned(value.into_bytes()))
     }
 
     /// Create an [`Utf8`] string from a [`&str`].
     pub fn borrowed(value: &'b str) -> Self {
-        Self(Bytes2::borrowed(value.as_bytes()))
+        Self(Bytes::borrowed(value.as_bytes()))
     }
 }
 

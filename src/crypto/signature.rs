@@ -11,30 +11,30 @@ use crate::arch;
 #[binwrite]
 #[derive(Debug)]
 #[bw(big)]
-pub struct Publickey<'s> {
+pub struct Publickey<'b> {
     /// The session identifier issued by the key-exchange.
-    pub session_id: &'s arch::Bytes,
+    pub session_id: arch::Bytes<'b>,
 
     #[bw(calc = 50)]
     magic: u8,
 
     /// Username for the auth request.
-    pub username: &'s arch::StringUtf8,
+    pub username: arch::Utf8<'b>,
 
     /// Service name to query.
-    pub service_name: &'s arch::StringAscii,
+    pub service_name: arch::Ascii<'b>,
 
     #[bw(calc = "publickey".into())]
-    method: arch::StringUtf8,
+    method: arch::Utf8<'b>,
 
     #[bw(calc = true.into())]
     signed: arch::Bool,
 
     /// Public key algorithm's name.
-    pub algorithm: &'s arch::Bytes,
+    pub algorithm: arch::Bytes<'b>,
 
     /// Public key blob.
-    pub blob: &'s arch::Bytes,
+    pub blob: arch::Bytes<'b>,
 }
 
 impl Publickey<'_> {

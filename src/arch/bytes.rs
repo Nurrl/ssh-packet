@@ -1,4 +1,4 @@
-use binrw::{binrw, BinRead, BinWrite};
+use binrw::{BinRead, BinWrite};
 
 #[derive(Debug, Clone)]
 enum Inner<'b> {
@@ -10,11 +10,11 @@ enum Inner<'b> {
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[derive(Debug, Clone)]
-pub struct Bytes2<'b> {
+pub struct Bytes<'b> {
     inner: Inner<'b>,
 }
 
-impl<'b> Default for Bytes2<'b> {
+impl<'b> Default for Bytes<'b> {
     fn default() -> Self {
         Self {
             inner: Inner::Owned(Default::default()),
@@ -22,7 +22,7 @@ impl<'b> Default for Bytes2<'b> {
     }
 }
 
-impl<'b> Bytes2<'b> {
+impl<'b> Bytes<'b> {
     /// Create [`Bytes`] from a _vector_.
     pub fn owned(value: Vec<u8>) -> Self {
         Self {
@@ -38,7 +38,7 @@ impl<'b> Bytes2<'b> {
     }
 }
 
-impl AsRef<[u8]> for Bytes2<'_> {
+impl AsRef<[u8]> for Bytes<'_> {
     fn as_ref(&self) -> &[u8] {
         match &self.inner {
             Inner::Owned(vec) => vec,
@@ -47,19 +47,19 @@ impl AsRef<[u8]> for Bytes2<'_> {
     }
 }
 
-impl From<Vec<u8>> for Bytes2<'_> {
+impl From<Vec<u8>> for Bytes<'_> {
     fn from(value: Vec<u8>) -> Self {
         Self::owned(value)
     }
 }
 
-impl<'b> From<&'b [u8]> for Bytes2<'b> {
+impl<'b> From<&'b [u8]> for Bytes<'b> {
     fn from(value: &'b [u8]) -> Self {
         Self::borrowed(value)
     }
 }
 
-impl BinRead for Bytes2<'_> {
+impl BinRead for Bytes<'_> {
     type Args<'a> = ();
 
     fn read_options<R: std::io::Read + std::io::Seek>(
@@ -81,7 +81,7 @@ impl BinRead for Bytes2<'_> {
     }
 }
 
-impl BinWrite for Bytes2<'_> {
+impl BinWrite for Bytes<'_> {
     type Args<'a> = ();
 
     fn write_options<W: std::io::Write + std::io::Seek>(
@@ -95,57 +95,5 @@ impl BinWrite for Bytes2<'_> {
 
         size.write_be(writer)?;
         buf.write_options(writer, endian, args)
-    }
-}
-
-/// A `string` as defined in the SSH protocol.
-///
-/// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
-#[binrw]
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
-#[brw(big)]
-pub struct Bytes {
-    #[bw(calc = payload.len() as u32)]
-    size: u32,
-
-    #[br(count = size)]
-    payload: Vec<u8>,
-}
-
-impl Bytes {
-    /// Create new [`Bytes`] from a [`Vec`].
-    pub fn new(s: impl Into<Vec<u8>>) -> Self {
-        Self { payload: s.into() }
-    }
-
-    /// Extract the [`Bytes`] into a [`Vec`].
-    pub fn into_vec(self) -> Vec<u8> {
-        self.payload
-    }
-}
-
-impl std::ops::Deref for Bytes {
-    type Target = [u8];
-
-    fn deref(&self) -> &Self::Target {
-        self.payload.as_ref()
-    }
-}
-
-impl std::ops::DerefMut for Bytes {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.payload.as_mut()
-    }
-}
-
-impl AsRef<[u8]> for Bytes {
-    fn as_ref(&self) -> &[u8] {
-        &self.payload
-    }
-}
-
-impl<T: Into<Vec<u8>>> From<T> for Bytes {
-    fn from(value: T) -> Self {
-        Self::new(value)
     }
 }

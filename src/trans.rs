@@ -12,15 +12,15 @@ use crate::arch;
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 1_u8)]
-pub struct Disconnect {
+pub struct Disconnect<'b> {
     /// Reason for disconnection.
     pub reason: DisconnectReason,
 
     /// Description of the reason for disconnection.
-    pub description: arch::StringUtf8,
+    pub description: arch::Utf8<'b>,
 
     /// Language tag.
-    pub language: arch::StringAscii,
+    pub language: arch::Ascii<'b>,
 }
 
 /// The `reason` for disconnect in the `SSH_MSG_DISCONNECT` message.
@@ -101,9 +101,9 @@ pub enum DisconnectReason {
 #[binrw]
 #[derive(Debug, Default, Clone)]
 #[brw(big, magic = 2_u8)]
-pub struct Ignore {
+pub struct Ignore<'b> {
     /// A random blob of data to ignore.
-    pub data: arch::Bytes,
+    pub data: arch::Bytes<'b>,
 }
 
 /// The `SSH_MSG_UNIMPLEMENTED` message.
@@ -123,15 +123,15 @@ pub struct Unimplemented {
 #[binrw]
 #[derive(Debug, Default, Clone)]
 #[brw(big, magic = 4_u8)]
-pub struct Debug {
+pub struct Debug<'b> {
     /// Whether the debug data should be forcefully displayed.
     pub always_display: arch::Bool,
 
     /// The debug message.
-    pub message: arch::StringUtf8,
+    pub message: arch::Utf8<'b>,
 
     /// Language tag.
-    pub language: arch::StringAscii,
+    pub language: arch::Ascii<'b>,
 }
 
 /// The `SSH_MSG_SERVICE_REQUEST` message.
@@ -140,9 +140,9 @@ pub struct Debug {
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 5_u8)]
-pub struct ServiceRequest {
+pub struct ServiceRequest<'b> {
     /// The service name to request.
-    pub service_name: arch::Bytes,
+    pub service_name: arch::Bytes<'b>,
 }
 
 /// The `SSH_MSG_SERVICE_ACCEPT` message.
@@ -151,9 +151,9 @@ pub struct ServiceRequest {
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 6_u8)]
-pub struct ServiceAccept {
+pub struct ServiceAccept<'b> {
     /// Service name accepted to be requested.
-    pub service_name: arch::Bytes,
+    pub service_name: arch::Bytes<'b>,
 }
 
 /// The `SSH_MSG_KEXINIT` message.
@@ -162,39 +162,39 @@ pub struct ServiceAccept {
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 20_u8)]
-pub struct KexInit {
+pub struct KexInit<'b> {
     /// The kex-init cookie.
     pub cookie: [u8; 16],
 
     /// Kex algorithms.
-    pub kex_algorithms: arch::NameList,
+    pub kex_algorithms: arch::NameList<'b>,
 
     /// Server host-key algorithms.
-    pub server_host_key_algorithms: arch::NameList,
+    pub server_host_key_algorithms: arch::NameList<'b>,
 
     /// Client -> server encryption algorithms.
-    pub encryption_algorithms_client_to_server: arch::NameList,
+    pub encryption_algorithms_client_to_server: arch::NameList<'b>,
 
     /// Server -> client encryption algorithms.
-    pub encryption_algorithms_server_to_client: arch::NameList,
+    pub encryption_algorithms_server_to_client: arch::NameList<'b>,
 
     /// Client -> server MAC algorithms.
-    pub mac_algorithms_client_to_server: arch::NameList,
+    pub mac_algorithms_client_to_server: arch::NameList<'b>,
 
     /// Server -> client MAC algorithms.
-    pub mac_algorithms_server_to_client: arch::NameList,
+    pub mac_algorithms_server_to_client: arch::NameList<'b>,
 
     /// Client -> server compression algorithms.
-    pub compression_algorithms_client_to_server: arch::NameList,
+    pub compression_algorithms_client_to_server: arch::NameList<'b>,
 
     /// Server -> client compression algorithms.
-    pub compression_algorithms_server_to_client: arch::NameList,
+    pub compression_algorithms_server_to_client: arch::NameList<'b>,
 
     /// Client -> server languages.
-    pub languages_client_to_server: arch::NameList,
+    pub languages_client_to_server: arch::NameList<'b>,
 
     /// Server -> client languages.
-    pub languages_server_to_client: arch::NameList,
+    pub languages_server_to_client: arch::NameList<'b>,
 
     /// Whether the first kex packet follows.
     pub first_kex_packet_follows: arch::Bool,
@@ -217,9 +217,9 @@ pub struct NewKeys;
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 30_u8)]
-pub struct KexdhInit {
+pub struct KexdhInit<'b> {
     /// Exchange value sent by the client.
-    pub e: arch::MpInt,
+    pub e: arch::MpInt<'b>,
 }
 
 /// The `SSH_MSG_KEXDH_REPLY` message.
@@ -228,15 +228,15 @@ pub struct KexdhInit {
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 31_u8)]
-pub struct KexdhReply {
+pub struct KexdhReply<'b> {
     /// Server's public host key.
-    pub k_s: arch::Bytes,
+    pub k_s: arch::Bytes<'b>,
 
     /// Exchange value sent by the server.
-    pub f: arch::MpInt,
+    pub f: arch::MpInt<'b>,
 
     /// Signature of the exchange hash.
-    pub signature: arch::Bytes,
+    pub signature: arch::Bytes<'b>,
 }
 
 /// The `SSH_MSG_KEX_ECDH_INIT` message.
@@ -245,9 +245,9 @@ pub struct KexdhReply {
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 30_u8)]
-pub struct KexEcdhInit {
+pub struct KexEcdhInit<'b> {
     /// Client's ephemeral public key octet string.
-    pub q_c: arch::Bytes,
+    pub q_c: arch::Bytes<'b>,
 }
 
 /// The `SSH_MSG_KEX_ECDH_REPLY` message.
@@ -256,13 +256,13 @@ pub struct KexEcdhInit {
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 31_u8)]
-pub struct KexEcdhReply {
+pub struct KexEcdhReply<'b> {
     /// Server's public host key.
-    pub k_s: arch::Bytes,
+    pub k_s: arch::Bytes<'b>,
 
     /// Server's ephemeral public key octet string.
-    pub q_s: arch::Bytes,
+    pub q_s: arch::Bytes<'b>,
 
     /// Signature of the exchange hash.
-    pub signature: arch::Bytes,
+    pub signature: arch::Bytes<'b>,
 }

@@ -1,16 +1,14 @@
-use std::collections::VecDeque;
+use binrw::{BinRead, BinWrite};
 
-use binrw::{binrw, BinRead, BinWrite};
-
-use super::{Bytes, Bytes2};
+use super::Bytes;
 
 /// A `mpint` as defined in the SSH protocol.
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[derive(Debug, Default, Clone)]
-pub struct MpInt2<'b>(pub Bytes2<'b>);
+pub struct MpInt<'b>(pub Bytes<'b>);
 
-impl BinRead for MpInt2<'_> {
+impl BinRead for MpInt<'_> {
     type Args<'a> = ();
 
     fn read_options<R: std::io::Read + std::io::Seek>(
@@ -22,7 +20,7 @@ impl BinRead for MpInt2<'_> {
     }
 }
 
-impl BinWrite for MpInt2<'_> {
+impl BinWrite for MpInt<'_> {
     type Args<'a> = ();
 
     fn write_options<W: std::io::Write + std::io::Seek>(
@@ -45,49 +43,5 @@ impl BinWrite for MpInt2<'_> {
         };
 
         buf.write_options(writer, endian, args)
-    }
-}
-
-/// A `mpint` as defined in the SSH protocol.
-///
-/// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
-#[binrw]
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
-#[brw(big)]
-pub struct MpInt(Bytes);
-
-impl MpInt {
-    /// Create new [`MpInt`] from a [`Vec`].
-    pub fn new(value: impl Into<VecDeque<u8>>) -> Self {
-        let mut vec = value.into();
-
-        match vec.front() {
-            Some(byte) if *byte >= 0x80 => {
-                vec.push_front(0);
-            }
-            _ => (),
-        };
-
-        Self(Bytes::new(vec))
-    }
-}
-
-impl std::ops::Deref for MpInt {
-    type Target = [u8];
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl AsRef<[u8]> for MpInt {
-    fn as_ref(&self) -> &[u8] {
-        &self.0
-    }
-}
-
-impl From<Vec<u8>> for MpInt {
-    fn from(value: Vec<u8>) -> Self {
-        Self::new(value)
     }
 }

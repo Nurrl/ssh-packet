@@ -1,6 +1,6 @@
 use binrw::binrw;
 
-use super::Bytes2;
+use super::Bytes;
 
 /// Errors which can occur when attempting to interpret a string as a ASCII characters.
 #[derive(Debug)]
@@ -20,13 +20,13 @@ impl std::error::Error for AsciiError {}
 #[binrw]
 #[derive(Default, Clone)]
 #[br(assert(self_0.as_ref().is_ascii()))]
-pub struct Ascii<'b>(Bytes2<'b>);
+pub struct Ascii<'b>(Bytes<'b>);
 
 impl<'b> Ascii<'b> {
     /// Create an [`Ascii`] string from a [`String`].
     pub fn owned(value: String) -> Result<Self, AsciiError> {
         if value.is_ascii() {
-            Ok(Self(Bytes2::owned(value.into_bytes())))
+            Ok(Self(Bytes::owned(value.into_bytes())))
         } else {
             Err(AsciiError {})
         }
@@ -35,7 +35,7 @@ impl<'b> Ascii<'b> {
     /// Create an [`Ascii`] string from a [`&str`].
     pub fn borrowed(value: &'b str) -> Result<Self, AsciiError> {
         if value.is_ascii() {
-            Ok(Self(Bytes2::borrowed(value.as_bytes())))
+            Ok(Self(Bytes::borrowed(value.as_bytes())))
         } else {
             Err(AsciiError {})
         }

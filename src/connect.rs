@@ -13,16 +13,16 @@ use crate::arch;
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 80_u8)]
-pub struct GlobalRequest {
-    #[bw(calc = arch::StringAscii::new(context.as_str()))]
-    kind: arch::StringAscii,
+pub struct GlobalRequest<'b> {
+    #[bw(calc = context.as_ascii())]
+    kind: arch::Ascii<'b>,
 
     /// Whether the sender wants a reply.
     pub want_reply: arch::Bool,
 
     /// The context of the global request.
-    #[br(args(&kind))]
-    pub context: GlobalRequestContext,
+    #[br(args(&kind.as_ref()))]
+    pub context: GlobalRequestContext<'b>,
 }
 
 /// The `context` in the `SSH_MSG_GLOBAL_REQUEST` message.
@@ -30,13 +30,13 @@ pub struct GlobalRequest {
 #[derive(Debug, Clone)]
 #[brw(big)]
 #[br(import(kind: &str))]
-pub enum GlobalRequestContext {
+pub enum GlobalRequestContext<'b> {
     /// A request of type `tcpip-forward`,
     /// as defined in [RFC4254 section 7.1](https://datatracker.ietf.org/doc/html/rfc4254#section-7.1).
     #[br(pre_assert(kind == GlobalRequestContext::TCPIP_FORWARD))]
     TcpipForward {
         /// Address to bind on the remote.
-        bind_address: arch::Bytes,
+        bind_address: arch::Bytes<'b>,
 
         /// Port to bind on the remote, randomly choosen if 0.
         bind_port: u32,
@@ -47,23 +47,24 @@ pub enum GlobalRequestContext {
     #[br(pre_assert(kind == GlobalRequestContext::CANCEL_TCPIP_FORWARD))]
     CancelTcpipForward {
         /// Address that was bound on the remote.
-        bind_address: arch::Bytes,
+        bind_address: arch::Bytes<'b>,
 
         /// Port that was bound on the remote.
         bind_port: u32,
     },
 }
 
-impl GlobalRequestContext {
+impl GlobalRequestContext<'_> {
     const TCPIP_FORWARD: &'static str = "tcpip-forward";
     const CANCEL_TCPIP_FORWARD: &'static str = "cancel-tcpip-forward";
 
     /// Get the [`GlobalRequestContext`]'s SSH identifier.
-    pub fn as_str(&self) -> &'static str {
-        match self {
+    pub fn as_ascii(&self) -> arch::Ascii<'static> {
+        arch::Ascii::borrowed(match self {
             Self::TcpipForward { .. } => Self::TCPIP_FORWARD,
             Self::CancelTcpipForward { .. } => Self::CANCEL_TCPIP_FORWARD,
-        }
+        })
+        .expect("non UTF-8 method identifer present in the code")
     }
 }
 /// The `SSH_MSG_REQUEST_SUCCESS` message (empty body).
@@ -100,9 +101,9 @@ pub struct RequestFailure;
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 90_u8)]
-pub struct ChannelOpen {
-    #[bw(calc = arch::StringAscii::new(context.as_str()))]
-    kind: arch::StringAscii,
+pub struct ChannelOpen<'b> {
+    #[bw(calc = context.as_ascii())]
+    kind: arch::Ascii<'b>,
 
     /// Sender channel.
     pub sender_channel: u32,
@@ -114,8 +115,8 @@ pub struct ChannelOpen {
     pub maximum_packet_size: u32,
 
     /// The context of the open request.
-    #[br(args(&kind))]
-    pub context: ChannelOpenContext,
+    #[br(args(&kind.as_ref()))]
+    pub context: ChannelOpenContext<'b>,
 }
 
 /// The `context` in the `SSH_MSG_CHANNEL_OPEN` message.
@@ -123,7 +124,7 @@ pub struct ChannelOpen {
 #[derive(Debug, Clone)]
 #[brw(big)]
 #[br(import(kind: &str))]
-pub enum ChannelOpenContext {
+pub enum ChannelOpenContext<'b> {
     /// A channel of type `session`,
     /// as defined in [RFC4254 section 6.1](https://datatracker.ietf.org/doc/html/rfc4254#section-6.1).
     #[br(pre_assert(kind == ChannelOpenContext::SESSION))]
@@ -134,7 +135,7 @@ pub enum ChannelOpenContext {
     #[br(pre_assert(kind == ChannelOpenContext::X11))]
     X11 {
         /// Originator address.
-        originator_address: arch::StringAscii,
+        originator_address: arch::Ascii<'b>,
 
         /// Originator port.
         originator_port: u32,
@@ -145,13 +146,13 @@ pub enum ChannelOpenContext {
     #[br(pre_assert(kind == ChannelOpenContext::FORWARDED_TCPIP))]
     ForwardedTcpip {
         /// Address that was connected on the remote.
-        address: arch::StringAscii,
+        address: arch::Ascii<'b>,
 
         /// Port that was connected on the remote.
         port: u32,
 
         /// Originator address.
-        originator_address: arch::StringAscii,
+        originator_address: arch::Ascii<'b>,
 
         /// Originator port.
         originator_port: u32,
@@ -162,33 +163,34 @@ pub enum ChannelOpenContext {
     #[br(pre_assert(kind == ChannelOpenContext::DIRECT_TCPIP))]
     DirectTcpip {
         /// Address to connect to.
-        address: arch::StringAscii,
+        address: arch::Ascii<'b>,
 
         /// Port to connect to.
         port: u32,
 
         /// Originator address.
-        originator_address: arch::StringAscii,
+        originator_address: arch::Ascii<'b>,
 
         /// Originator port.
         originator_port: u32,
     },
 }
 
-impl ChannelOpenContext {
+impl ChannelOpenContext<'_> {
     const SESSION: &'static str = "session";
     const X11: &'static str = "x11";
     const FORWARDED_TCPIP: &'static str = "forwarded-tcpip";
     const DIRECT_TCPIP: &'static str = "direct-tcpip";
 
     /// Get the [`ChannelOpenContext`]'s SSH identifier.
-    pub fn as_str(&self) -> &'static str {
-        match self {
+    pub fn as_ascii(&self) -> arch::Ascii<'static> {
+        arch::Ascii::borrowed(match self {
             Self::Session { .. } => Self::SESSION,
             Self::X11 { .. } => Self::X11,
             Self::ForwardedTcpip { .. } => Self::FORWARDED_TCPIP,
             Self::DirectTcpip { .. } => Self::DIRECT_TCPIP,
-        }
+        })
+        .expect("non UTF-8 method identifer present in the code")
     }
 }
 
@@ -218,7 +220,7 @@ pub struct ChannelOpenConfirmation {
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 92_u8)]
-pub struct ChannelOpenFailure {
+pub struct ChannelOpenFailure<'b> {
     /// Recipient channel.
     pub recipient_channel: u32,
 
@@ -226,10 +228,10 @@ pub struct ChannelOpenFailure {
     pub reason: ChannelOpenFailureReason,
 
     /// Description of the reason.
-    pub description: arch::StringUtf8,
+    pub description: arch::Utf8<'b>,
 
     /// Language tag.
-    pub language: arch::StringAscii,
+    pub language: arch::Ascii<'b>,
 }
 
 /// The `reason` for failure in the `SSH_MSG_CHANNEL_OPEN_FAILURE` message.
@@ -280,12 +282,12 @@ pub struct ChannelWindowAdjust {
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 94_u8)]
-pub struct ChannelData {
+pub struct ChannelData<'b> {
     /// Recipient channel.
     pub recipient_channel: u32,
 
     /// Data bytes to transport.
-    pub data: arch::Bytes,
+    pub data: arch::Bytes<'b>,
 }
 
 /// The `SSH_MSG_CHANNEL_EXTENDED_DATA` message.
@@ -294,7 +296,7 @@ pub struct ChannelData {
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 95_u8)]
-pub struct ChannelExtendedData {
+pub struct ChannelExtendedData<'b> {
     /// Recipient channel.
     pub recipient_channel: u32,
 
@@ -302,7 +304,7 @@ pub struct ChannelExtendedData {
     pub data_type: NonZeroU32,
 
     /// Data bytes to transport.
-    pub data: arch::Bytes,
+    pub data: arch::Bytes<'b>,
 }
 
 /// The `SSH_MSG_CHANNEL_EOF` message.
@@ -333,19 +335,19 @@ pub struct ChannelClose {
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 98_u8)]
-pub struct ChannelRequest {
+pub struct ChannelRequest<'b> {
     /// Recipient channel.
     pub recipient_channel: u32,
 
-    #[bw(calc = arch::StringAscii::new(context.as_str()))]
-    kind: arch::StringAscii,
+    #[bw(calc = context.as_ascii())]
+    kind: arch::Ascii<'b>,
 
     /// Whether the sender wants a reply.
     pub want_reply: arch::Bool,
 
     /// The context of the channel request.
-    #[br(args(&kind))]
-    pub context: ChannelRequestContext,
+    #[br(args(&kind.as_ref()))]
+    pub context: ChannelRequestContext<'b>,
 }
 
 /// The `context` in the `SSH_MSG_CHANNEL_REQUEST` message.
@@ -353,13 +355,13 @@ pub struct ChannelRequest {
 #[derive(Debug, Clone)]
 #[brw(big)]
 #[br(import(kind: &str))]
-pub enum ChannelRequestContext {
+pub enum ChannelRequestContext<'b> {
     /// A request of type `pty-req`,
     /// as defined in [RFC4254 section 6.2](https://datatracker.ietf.org/doc/html/rfc4254#section-6.2).
     #[br(pre_assert(kind == ChannelRequestContext::PTY))]
     Pty {
         /// Peer's `$TERM` environment variable value.
-        term: arch::Bytes,
+        term: arch::Bytes<'b>,
 
         /// Terminal width, in columns.
         width_chars: u32,
@@ -374,7 +376,7 @@ pub enum ChannelRequestContext {
         height_pixels: u32,
 
         /// Encoded terminal modes.
-        modes: arch::Bytes,
+        modes: arch::Bytes<'b>,
     },
 
     /// A request of type `x11-req`,
@@ -385,10 +387,10 @@ pub enum ChannelRequestContext {
         single_connection: arch::Bool,
 
         /// X11 authentication protocol.
-        x11_authentication_protocol: arch::Bytes,
+        x11_authentication_protocol: arch::Bytes<'b>,
 
         /// X11 authentication cookie.
-        x11_authentication_cookie: arch::Bytes,
+        x11_authentication_cookie: arch::Bytes<'b>,
 
         /// X11 authentication number.
         x11_screen_number: u32,
@@ -399,10 +401,10 @@ pub enum ChannelRequestContext {
     #[br(pre_assert(kind == ChannelRequestContext::ENV))]
     Env {
         /// Environment variable name.
-        name: arch::Bytes,
+        name: arch::Bytes<'b>,
 
         /// Environment variable value.
-        value: arch::Bytes,
+        value: arch::Bytes<'b>,
     },
 
     /// A request of type `shell`,
@@ -415,7 +417,7 @@ pub enum ChannelRequestContext {
     #[br(pre_assert(kind == ChannelRequestContext::EXEC))]
     Exec {
         /// Command to be executed.
-        command: arch::Bytes,
+        command: arch::Bytes<'b>,
     },
 
     /// A request of type `subsystem`,
@@ -423,7 +425,7 @@ pub enum ChannelRequestContext {
     #[br(pre_assert(kind == ChannelRequestContext::SUBSYSTEM))]
     Subsystem {
         /// Name of the requested subsystem.
-        name: arch::Bytes,
+        name: arch::Bytes<'b>,
     },
 
     /// A request of type `window-change`,
@@ -456,7 +458,7 @@ pub enum ChannelRequestContext {
     #[br(pre_assert(kind == ChannelRequestContext::SIGNAL))]
     Signal {
         /// Signal name (without the "SIG" prefix).
-        name: arch::Bytes,
+        name: arch::Bytes<'b>,
     },
 
     /// A request of type `exit-status`,
@@ -472,20 +474,20 @@ pub enum ChannelRequestContext {
     #[br(pre_assert(kind == ChannelRequestContext::EXIT_SIGNAL))]
     ExitSignal {
         /// Signal name (without the "SIG" prefix).
-        name: arch::Bytes,
+        name: arch::Bytes<'b>,
 
         /// Whether a core dump is triggering the signal.
         core_dumped: arch::Bool,
 
         /// The error message for the signal.
-        error_message: arch::StringUtf8,
+        error_message: arch::Utf8<'b>,
 
         /// Language tag.
-        language: arch::StringAscii,
+        language: arch::Ascii<'b>,
     },
 }
 
-impl ChannelRequestContext {
+impl ChannelRequestContext<'_> {
     const PTY: &'static str = "pty-req";
     const X11: &'static str = "x11-req";
     const ENV: &'static str = "env";
@@ -499,8 +501,8 @@ impl ChannelRequestContext {
     const EXIT_SIGNAL: &'static str = "exit-signal";
 
     /// Get the [`ChannelRequestContext`]'s SSH identifier.
-    pub fn as_str(&self) -> &'static str {
-        match self {
+    pub fn as_ascii(&self) -> arch::Ascii<'static> {
+        arch::Ascii::borrowed(match self {
             Self::Pty { .. } => Self::PTY,
             Self::X11 { .. } => Self::X11,
             Self::Env { .. } => Self::ENV,
@@ -512,7 +514,8 @@ impl ChannelRequestContext {
             Self::Signal { .. } => Self::SIGNAL,
             Self::ExitStatus { .. } => Self::EXIT_STATUS,
             Self::ExitSignal { .. } => Self::EXIT_SIGNAL,
-        }
+        })
+        .expect("non UTF-8 method identifer present in the code")
     }
 }
 

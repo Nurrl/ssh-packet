@@ -12,30 +12,30 @@ use crate::{arch, trans};
 #[binwrite]
 #[derive(Debug)]
 #[bw(big)]
-pub struct Ecdh<'e> {
+pub struct Ecdh<'b> {
     /// Client's identification string (`\r` and `\n` excluded).
-    pub v_c: &'e arch::Bytes,
+    pub v_c: arch::Bytes<'b>,
 
     /// Server's identification string (`\r` and `\n` excluded).
-    pub v_s: &'e arch::Bytes,
+    pub v_s: arch::Bytes<'b>,
 
     /// Payload of the client's `SSH_MSG_KEXINIT` message.
-    pub i_c: Lengthed<&'e trans::KexInit>,
+    pub i_c: Lengthed<&'b trans::KexInit<'b>>,
 
     /// Payload of the server's `SSH_MSG_KEXINIT` message.
-    pub i_s: Lengthed<&'e trans::KexInit>,
+    pub i_s: Lengthed<&'b trans::KexInit<'b>>,
 
     /// Server's public host key.
-    pub k_s: &'e arch::Bytes,
+    pub k_s: arch::Bytes<'b>,
 
     /// Client's ephemeral public key octet string.
-    pub q_c: &'e arch::Bytes,
+    pub q_c: arch::Bytes<'b>,
 
     /// Server's ephemeral public key octet string.
-    pub q_s: &'e arch::Bytes,
+    pub q_s: arch::Bytes<'b>,
 
     /// Computed shared secret.
-    pub k: &'e arch::MpInt,
+    pub k: arch::MpInt<'b>,
 }
 
 impl Ecdh<'_> {
