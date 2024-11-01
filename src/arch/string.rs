@@ -4,9 +4,7 @@ use binrw::binrw;
 
 use super::Bytes;
 
-/// A `string` as defined in the SSH protocol,
-/// prefixed with it's `size` as a [`u32`],
-/// restricted to valid **UTF-8**.
+/// A `string` as defined in the SSH protocol, restricted to valid **UTF-8**.
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[binrw]
@@ -60,9 +58,7 @@ impl<T: Into<String>> From<T> for StringUtf8 {
     }
 }
 
-/// A `string` as defined in the SSH protocol,
-/// prefixed with it's `size` as a [`u32`],
-/// restricted to valid **ASCII**.
+/// A `string` as defined in the SSH protocol, restricted to valid **ASCII**.
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[binrw]

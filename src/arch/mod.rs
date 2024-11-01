@@ -2,7 +2,13 @@
 //! as defined in the [RFC 4251](https://datatracker.ietf.org/doc/html/rfc4251).
 
 mod bytes;
-pub use bytes::Bytes;
+pub use bytes::{Bytes, Bytes2};
+
+mod ascii;
+pub use ascii::{Ascii, AsciiError};
+
+mod utf8;
+pub use utf8::Utf8;
 
 mod string;
 pub use string::{StringAscii, StringUtf8};
