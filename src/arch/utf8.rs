@@ -20,6 +20,11 @@ impl<'b> Utf8<'b> {
     pub fn borrowed(value: &'b str) -> Self {
         Self(Bytes::borrowed(value.as_bytes()))
     }
+
+    /// Extract the buffer as a [`String`].
+    pub fn into_string(self) -> String {
+        String::from_utf8(self.0.into_vec()).expect("The data wasn't UTF-8 encoded")
+    }
 }
 
 impl std::fmt::Debug for Utf8<'_> {

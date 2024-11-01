@@ -17,7 +17,6 @@ enum Inner<'b> {
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "zeroize", derive(Zeroize))]
-#[cfg_attr(feature = "zeroize", zeroize(drop))]
 pub struct Bytes<'b> {
     inner: Inner<'b>,
 }
@@ -42,6 +41,14 @@ impl<'b> Bytes<'b> {
     pub fn borrowed(value: &'b [u8]) -> Self {
         Self {
             inner: Inner::Borrowed(value),
+        }
+    }
+
+    /// Extract the buffer into a [`Vec`].
+    pub fn into_vec(self) -> Vec<u8> {
+        match self.inner {
+            Inner::Owned(vec) => vec,
+            Inner::Borrowed(slice) => slice.to_vec(),
         }
     }
 }
