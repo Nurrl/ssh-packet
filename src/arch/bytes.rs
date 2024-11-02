@@ -31,7 +31,7 @@ impl<'b> Default for Bytes<'b> {
 
 impl<'b> Bytes<'b> {
     /// Create [`Bytes`] from a _vector_.
-    pub fn owned(value: Vec<u8>) -> Self {
+    pub const fn owned(value: Vec<u8>) -> Self {
         Self {
             inner: Inner::Owned(value),
         }
