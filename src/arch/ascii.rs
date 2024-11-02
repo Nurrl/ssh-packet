@@ -59,6 +59,8 @@ impl<'b> Ascii<'b> {
         }
     }
 
+    // TODO: (safety) Remove this method when compiler feature `const_precise_live_drops`
+    // and directly use `Self::borrowed` in the `ascii!` macro.
     #[doc(hidden)]
     #[deprecated(
         since = "0.0.0",
