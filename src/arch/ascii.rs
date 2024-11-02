@@ -1,6 +1,24 @@
+use std::ops::Deref;
+
 use binrw::binrw;
 
 use super::Bytes;
+
+/// Create an [`Ascii`] string from a literal in _const_-context.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __ascii__ {
+    ($string:literal) => {
+        if $string.is_ascii() {
+            #[allow(deprecated)]
+            $crate::arch::Ascii::borrowed_unchecked($string)
+        } else {
+            panic!("the literal wasn't ASCII-formatted")
+        }
+    };
+}
+
+pub use __ascii__ as ascii;
 
 /// Errors which can occur when attempting to interpret a string as a ASCII characters.
 #[derive(Debug)]
@@ -18,8 +36,8 @@ impl std::error::Error for AsciiError {}
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[binrw]
-#[derive(Default, Clone)]
-#[br(assert(self_0.as_ref().is_ascii()))]
+#[derive(Default, Clone, PartialEq, Eq)]
+#[br(assert(self_0.as_borrow().is_ascii()))]
 pub struct Ascii<'b>(Bytes<'b>);
 
 impl<'b> Ascii<'b> {
@@ -41,27 +59,49 @@ impl<'b> Ascii<'b> {
         }
     }
 
+    #[doc(hidden)]
+    #[deprecated(
+        since = "0.0.0",
+        note = "This is an internal function, and is not safe to work with"
+    )]
+    pub const fn borrowed_unchecked(value: &'b str) -> Self {
+        Self(Bytes::borrowed(value.as_bytes()))
+    }
+
+    /// Obtain an [`Ascii`] string from a reference by borrowing the internal buffer.
+    pub fn as_borrow<'a: 'b>(&'a self) -> Ascii<'a> {
+        Self(self.0.as_borrow())
+    }
+
     /// Extract the buffer as a [`String`].
     pub fn into_string(self) -> String {
-        String::from_utf8(self.0.into_vec()).expect("The data wasn't UTF-8 encoded")
+        String::from_utf8(self.0.into_vec()).expect("The inner buffer contained non UTF-8 data")
     }
 }
 
 impl std::fmt::Debug for Ascii<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("Ascii").field(&self.as_ref()).finish()
+        f.debug_tuple("Ascii").field(&&**self).finish()
     }
 }
 
 impl std::fmt::Display for Ascii<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.as_ref())
+        f.write_str(self)
+    }
+}
+
+impl Deref for Ascii<'_> {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        std::str::from_utf8(&self.0).expect("The inner buffer contained non UTF-8 data")
     }
 }
 
 impl AsRef<str> for Ascii<'_> {
     fn as_ref(&self) -> &str {
-        std::str::from_utf8(self.0.as_ref()).expect("The data wasn't UTF-8 encoded")
+        self
     }
 }
 

@@ -9,7 +9,7 @@ use super::Bytes;
 ///
 /// see <https://datatracker.ietf.org/doc/html/rfc4251#section-5>.
 #[binrw]
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "zeroize", derive(Zeroize))]
 pub struct MpInt<'b>(Bytes<'b>);
 
@@ -31,10 +31,15 @@ impl<'b> MpInt<'b> {
             _ => Self(Bytes::borrowed(value)),
         }
     }
+
+    /// Obtain an [`MpInt`] from a reference by borrowing the internal buffer.
+    pub fn as_borrow<'a: 'b>(&'a self) -> MpInt<'a> {
+        Self(self.0.as_borrow())
+    }
 }
 
 impl AsRef<[u8]> for MpInt<'_> {
     fn as_ref(&self) -> &[u8] {
-        self.0.as_ref()
+        &self.0
     }
 }

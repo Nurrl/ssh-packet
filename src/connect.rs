@@ -21,7 +21,7 @@ pub struct GlobalRequest<'b> {
     pub want_reply: arch::Bool,
 
     /// The context of the global request.
-    #[br(args(&kind.as_ref()))]
+    #[br(args(kind))]
     pub context: GlobalRequestContext<'b>,
 }
 
@@ -29,7 +29,7 @@ pub struct GlobalRequest<'b> {
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big)]
-#[br(import(kind: &str))]
+#[br(import(kind: arch::Ascii<'_>))]
 pub enum GlobalRequestContext<'b> {
     /// A request of type `tcpip-forward`,
     /// as defined in [RFC4254 section 7.1](https://datatracker.ietf.org/doc/html/rfc4254#section-7.1).
@@ -55,16 +55,15 @@ pub enum GlobalRequestContext<'b> {
 }
 
 impl GlobalRequestContext<'_> {
-    const TCPIP_FORWARD: &'static str = "tcpip-forward";
-    const CANCEL_TCPIP_FORWARD: &'static str = "cancel-tcpip-forward";
+    const TCPIP_FORWARD: arch::Ascii<'static> = arch::ascii!("tcpip-forward");
+    const CANCEL_TCPIP_FORWARD: arch::Ascii<'static> = arch::ascii!("cancel-tcpip-forward");
 
     /// Get the [`GlobalRequestContext`]'s SSH identifier.
     pub fn as_ascii(&self) -> arch::Ascii<'static> {
-        arch::Ascii::borrowed(match self {
+        match self {
             Self::TcpipForward { .. } => Self::TCPIP_FORWARD,
             Self::CancelTcpipForward { .. } => Self::CANCEL_TCPIP_FORWARD,
-        })
-        .expect("non UTF-8 method identifer present in the code")
+        }
     }
 }
 /// The `SSH_MSG_REQUEST_SUCCESS` message (empty body).
@@ -115,7 +114,7 @@ pub struct ChannelOpen<'b> {
     pub maximum_packet_size: u32,
 
     /// The context of the open request.
-    #[br(args(&kind.as_ref()))]
+    #[br(args(kind))]
     pub context: ChannelOpenContext<'b>,
 }
 
@@ -123,7 +122,7 @@ pub struct ChannelOpen<'b> {
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big)]
-#[br(import(kind: &str))]
+#[br(import(kind: arch::Ascii<'_>))]
 pub enum ChannelOpenContext<'b> {
     /// A channel of type `session`,
     /// as defined in [RFC4254 section 6.1](https://datatracker.ietf.org/doc/html/rfc4254#section-6.1).
@@ -177,20 +176,19 @@ pub enum ChannelOpenContext<'b> {
 }
 
 impl ChannelOpenContext<'_> {
-    const SESSION: &'static str = "session";
-    const X11: &'static str = "x11";
-    const FORWARDED_TCPIP: &'static str = "forwarded-tcpip";
-    const DIRECT_TCPIP: &'static str = "direct-tcpip";
+    const SESSION: arch::Ascii<'static> = arch::ascii!("session");
+    const X11: arch::Ascii<'static> = arch::ascii!("x11");
+    const FORWARDED_TCPIP: arch::Ascii<'static> = arch::ascii!("forwarded-tcpip");
+    const DIRECT_TCPIP: arch::Ascii<'static> = arch::ascii!("direct-tcpip");
 
     /// Get the [`ChannelOpenContext`]'s SSH identifier.
     pub fn as_ascii(&self) -> arch::Ascii<'static> {
-        arch::Ascii::borrowed(match self {
+        match self {
             Self::Session { .. } => Self::SESSION,
             Self::X11 { .. } => Self::X11,
             Self::ForwardedTcpip { .. } => Self::FORWARDED_TCPIP,
             Self::DirectTcpip { .. } => Self::DIRECT_TCPIP,
-        })
-        .expect("non UTF-8 method identifer present in the code")
+        }
     }
 }
 
@@ -346,7 +344,7 @@ pub struct ChannelRequest<'b> {
     pub want_reply: arch::Bool,
 
     /// The context of the channel request.
-    #[br(args(&kind.as_ref()))]
+    #[br(args(kind))]
     pub context: ChannelRequestContext<'b>,
 }
 
@@ -354,7 +352,7 @@ pub struct ChannelRequest<'b> {
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big)]
-#[br(import(kind: &str))]
+#[br(import(kind: arch::Ascii<'_>))]
 pub enum ChannelRequestContext<'b> {
     /// A request of type `pty-req`,
     /// as defined in [RFC4254 section 6.2](https://datatracker.ietf.org/doc/html/rfc4254#section-6.2).
@@ -488,21 +486,21 @@ pub enum ChannelRequestContext<'b> {
 }
 
 impl ChannelRequestContext<'_> {
-    const PTY: &'static str = "pty-req";
-    const X11: &'static str = "x11-req";
-    const ENV: &'static str = "env";
-    const SHELL: &'static str = "shell";
-    const EXEC: &'static str = "exec";
-    const SUBSYSTEM: &'static str = "subsystem";
-    const WINDOW_CHANGE: &'static str = "window-change";
-    const XON_XOFF: &'static str = "xon-xoff";
-    const SIGNAL: &'static str = "signal";
-    const EXIT_STATUS: &'static str = "exit-status";
-    const EXIT_SIGNAL: &'static str = "exit-signal";
+    const PTY: arch::Ascii<'static> = arch::ascii!("pty-req");
+    const X11: arch::Ascii<'static> = arch::ascii!("x11-req");
+    const ENV: arch::Ascii<'static> = arch::ascii!("env");
+    const SHELL: arch::Ascii<'static> = arch::ascii!("shell");
+    const EXEC: arch::Ascii<'static> = arch::ascii!("exec");
+    const SUBSYSTEM: arch::Ascii<'static> = arch::ascii!("subsystem");
+    const WINDOW_CHANGE: arch::Ascii<'static> = arch::ascii!("window-change");
+    const XON_XOFF: arch::Ascii<'static> = arch::ascii!("xon-xoff");
+    const SIGNAL: arch::Ascii<'static> = arch::ascii!("signal");
+    const EXIT_STATUS: arch::Ascii<'static> = arch::ascii!("exit-status");
+    const EXIT_SIGNAL: arch::Ascii<'static> = arch::ascii!("exit-signal");
 
     /// Get the [`ChannelRequestContext`]'s SSH identifier.
     pub fn as_ascii(&self) -> arch::Ascii<'static> {
-        arch::Ascii::borrowed(match self {
+        match self {
             Self::Pty { .. } => Self::PTY,
             Self::X11 { .. } => Self::X11,
             Self::Env { .. } => Self::ENV,
@@ -514,8 +512,7 @@ impl ChannelRequestContext<'_> {
             Self::Signal { .. } => Self::SIGNAL,
             Self::ExitStatus { .. } => Self::EXIT_STATUS,
             Self::ExitSignal { .. } => Self::EXIT_SIGNAL,
-        })
-        .expect("non UTF-8 method identifer present in the code")
+        }
     }
 }
 

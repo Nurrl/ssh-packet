@@ -12,9 +12,9 @@ pub struct NameList<'b>(pub Ascii<'b>);
 
 impl NameList<'_> {
     /// Retrieve the first name from `self` that is also in `other`.
-    pub fn preferred_in(&self, other: &Self) -> Option<&str> {
+    pub fn preferred_in(&self, other: &Self) -> Option<Ascii<'_>> {
         self.into_iter()
-            .find(|&name| other.into_iter().any(|n| name == n))
+            .find(|this| other.into_iter().any(|other| this == &other))
     }
 }
 
@@ -26,8 +26,8 @@ where
         Self(
             Ascii::owned(
                 iter.into_iter()
+                    .filter(|item| !item.as_ref().is_empty())
                     .map(|item| item.as_ref().to_owned())
-                    .filter(|name| !name.is_empty())
                     .collect::<Vec<_>>()
                     .join(","),
             )
@@ -37,11 +37,15 @@ where
 }
 
 impl<'a: 'b, 'b> IntoIterator for &'a NameList<'b> {
-    type Item = &'b str;
+    type Item = Ascii<'b>;
 
-    type IntoIter = std::iter::Filter<std::str::Split<'b, char>, for<'f> fn(&'f &'b str) -> bool>;
+    type IntoIter =
+        std::iter::FilterMap<std::str::Split<'b, char>, fn(&'b str) -> Option<Self::Item>>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.0.as_ref().split(',').filter(|name| !name.is_empty())
+        #[allow(deprecated)]
+        self.0
+            .split(',')
+            .filter_map(|name| (!name.is_empty()).then_some(Ascii::borrowed_unchecked(name)))
     }
 }

@@ -5,6 +5,8 @@ mod bytes;
 pub use bytes::Bytes;
 
 mod ascii;
+#[doc(inline)]
+pub use ascii::ascii;
 pub use ascii::{Ascii, AsciiError};
 
 mod utf8;

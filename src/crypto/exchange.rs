@@ -35,7 +35,7 @@ pub struct Ecdh<'b> {
     pub q_s: arch::Bytes<'b>,
 
     /// Computed shared secret.
-    pub k: &'b arch::MpInt<'b>,
+    pub k: arch::MpInt<'b>,
 }
 
 impl Ecdh<'_> {

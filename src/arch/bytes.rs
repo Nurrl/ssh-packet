@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use binrw::{BinRead, BinWrite};
 
 #[cfg(feature = "zeroize")]
@@ -44,6 +46,11 @@ impl<'b> Bytes<'b> {
         }
     }
 
+    /// Obtain [`Bytes`] from a reference by borrowing the internal buffer.
+    pub fn as_borrow<'a: 'b>(&'a self) -> Bytes<'a> {
+        Bytes::borrowed(self)
+    }
+
     /// Extract the buffer into a [`Vec`].
     pub fn into_vec(self) -> Vec<u8> {
         match self.inner {
@@ -53,14 +60,30 @@ impl<'b> Bytes<'b> {
     }
 }
 
-impl AsRef<[u8]> for Bytes<'_> {
-    fn as_ref(&self) -> &[u8] {
-        match &self.inner {
-            Inner::Owned(vec) => vec,
+impl Deref for Bytes<'_> {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        match self.inner {
+            Inner::Owned(ref vec) => vec,
             Inner::Borrowed(slice) => slice,
         }
     }
 }
+
+impl AsRef<[u8]> for Bytes<'_> {
+    fn as_ref(&self) -> &[u8] {
+        self
+    }
+}
+
+impl PartialEq for Bytes<'_> {
+    fn eq(&self, other: &Bytes<'_>) -> bool {
+        **self == **other
+    }
+}
+
+impl Eq for Bytes<'_> {}
 
 impl From<Vec<u8>> for Bytes<'_> {
     fn from(value: Vec<u8>) -> Self {
@@ -105,7 +128,7 @@ impl BinWrite for Bytes<'_> {
         endian: binrw::Endian,
         args: Self::Args<'_>,
     ) -> binrw::BinResult<()> {
-        let buf = self.as_ref();
+        let buf = &**self;
         let size = buf.len() as u32;
 
         size.write_be(writer)?;

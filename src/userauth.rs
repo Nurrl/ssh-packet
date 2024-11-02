@@ -7,7 +7,7 @@ use crate::arch;
 
 /// The `SSH_MSG_USERAUTH_REQUEST` message.
 ///
-/// see <https://datatracker.ietf.org/doc/html/rfc4252>.
+/// see <https://datatracker.ietf.org/doc/html/rfc4252#section-5>.
 #[binrw]
 #[derive(Debug, Clone)]
 #[brw(big, magic = 50_u8)]
@@ -22,14 +22,14 @@ pub struct Request<'b> {
     auth_method: arch::Ascii<'b>,
 
     /// Authentication method used.
-    #[br(args(&auth_method.as_ref()))]
+    #[br(args(auth_method))]
     pub method: Method<'b>,
 }
 
 /// The authentication method in the `SSH_MSG_USERAUTH_REQUEST` message.
 #[binrw]
 #[derive(Debug, Clone)]
-#[br(import(method: &str))]
+#[br(import(method: arch::Ascii<'_>))]
 pub enum Method<'b> {
     /// Authenticate using the `none` method,
     /// as defined in [RFC4252 section 5.2](https://datatracker.ietf.org/doc/html/rfc4252#section-5.2).
@@ -104,30 +104,29 @@ pub enum Method<'b> {
 
 impl Method<'_> {
     /// The SSH `none` authentication method.
-    pub const NONE: &'static str = "none";
+    pub const NONE: arch::Ascii<'static> = arch::ascii!("none");
 
     /// The SSH `publickey` authentication method.
-    pub const PUBLICKEY: &'static str = "publickey";
+    pub const PUBLICKEY: arch::Ascii<'static> = arch::ascii!("publickey");
 
     /// The SSH `password` authentication method.
-    pub const PASSWORD: &'static str = "password";
+    pub const PASSWORD: arch::Ascii<'static> = arch::ascii!("password");
 
     /// The SSH `hostbased` authentication method.
-    pub const HOSTBASED: &'static str = "hostbased";
+    pub const HOSTBASED: arch::Ascii<'static> = arch::ascii!("hostbased");
 
     /// The SSH `keyboard-interactive` authentication method.
-    pub const KEYBOARD_INTERACTIVE: &'static str = "keyboard-interactive";
+    pub const KEYBOARD_INTERACTIVE: arch::Ascii<'static> = arch::ascii!("keyboard-interactive");
 
     /// Get the [`Method`]'s SSH identifier.
     pub fn as_ascii(&self) -> arch::Ascii<'static> {
-        arch::Ascii::borrowed(match self {
+        match self {
             Self::None { .. } => Self::NONE,
             Self::Publickey { .. } => Self::PUBLICKEY,
             Self::Password { .. } => Self::PASSWORD,
             Self::Hostbased { .. } => Self::HOSTBASED,
             Self::KeyboardInteractive { .. } => Self::KEYBOARD_INTERACTIVE,
-        })
-        .expect("non UTF-8 method identifer present in the code")
+        }
     }
 }
 
