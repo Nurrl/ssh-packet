@@ -9,7 +9,7 @@ use binrw::binrw;
 pub struct Bool(
     #[br(map = |n: u8| n > 0)]
     #[bw(map = |b| u8::from(*b))]
-    bool,
+    pub bool,
 );
 
 impl std::ops::Not for Bool {

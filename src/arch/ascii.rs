@@ -33,7 +33,7 @@ impl<'b> Ascii<'b> {
     }
 
     /// Create an [`Ascii`] string from a [`&str`].
-    pub fn borrowed(value: &'b str) -> Result<Self, AsciiError> {
+    pub const fn borrowed(value: &'b str) -> Result<Self, AsciiError> {
         if value.is_ascii() {
             Ok(Self(Bytes::borrowed(value.as_bytes())))
         } else {

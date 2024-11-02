@@ -38,7 +38,7 @@ impl<'b> Bytes<'b> {
     }
 
     /// Create [`Bytes`] from a _slice_.
-    pub fn borrowed(value: &'b [u8]) -> Self {
+    pub const fn borrowed(value: &'b [u8]) -> Self {
         Self {
             inner: Inner::Borrowed(value),
         }

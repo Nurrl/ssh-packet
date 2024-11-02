@@ -17,7 +17,7 @@ impl<'b> Utf8<'b> {
     }
 
     /// Create an [`Utf8`] string from a [`&str`].
-    pub fn borrowed(value: &'b str) -> Self {
+    pub const fn borrowed(value: &'b str) -> Self {
         Self(Bytes::borrowed(value.as_bytes()))
     }
 
